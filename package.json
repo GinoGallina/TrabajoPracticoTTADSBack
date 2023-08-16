@@ -1,0 +1,24 @@
+{
+  "name": "trabajopracticottads",
+  "version": "1.0.0",
+  "description": "Market Place",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GinoGallina/TrabajoPracticoTTADS.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GinoGallina/TrabajoPracticoTTADS/issues"
+  },
+  "homepage": "https://github.com/GinoGallina/TrabajoPracticoTTADS#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0",
+    "eslint": "^8.47.0"
+  }
+}
