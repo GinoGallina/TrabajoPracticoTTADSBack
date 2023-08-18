@@ -5,7 +5,6 @@ const paymenttypeController = {
   getAllPaymentTypes: async (req, res) => {
     try {
       const payment_types = await PaymentType.find();
-      console.log(payment_types)
       res.status(200).json(payment_types);
     } catch (error) {
       res.status(500).json({ error: 'Error al obtener los tipos de pagos' });

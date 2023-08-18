@@ -5,13 +5,13 @@ import payment_typeRouter  from './routes/payment_type.js'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import db from './config/database.js'
 
-
+console.clear();
 const app = express()
 app.use(json())
 //app.use(corsMiddleware())
 app.disable('x-powered-by')
 
-//app.use('/product', moviesRouter)
+
 app.use('/category', categoryRouter)
 app.use('/payment_type', payment_typeRouter)
 
