@@ -1,15 +1,22 @@
 import express, { json } from 'express' // require -> commonJS
-import { moviesRouter } from './routes/movies.js'
-import { corsMiddleware } from './middlewares/cors.js'
+import categoryRouter  from './routes/category.js'
+import payment_typeRouter  from './routes/payment_type.js'
+import userRouter  from './routes/user.js'
+//import { corsMiddleware } from './middlewares/cors.js'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import db from './config/database.js'
 
-
+console.clear();
 const app = express()
 app.use(json())
-app.use(corsMiddleware())
+//app.use(corsMiddleware())
 app.disable('x-powered-by')
 
-app.use('/product', moviesRouter)
 
+app.use('/category', categoryRouter)
+app.use('/payment_type', payment_typeRouter)
+
+app.use('/user', userRouter)
 const PORT = 1234
 
 app.listen(PORT, () => {
