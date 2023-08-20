@@ -1,11 +1,10 @@
-import mongoose from 'mongoose';
+import mongoose from 'mongoose'
 
+const PaymentTypeSchema = new mongoose.Schema({
+  payment_id: String,
+  type: String
+})
 
-const payment_typeSchema = new mongoose.Schema({
-  payment_id:String,
-  type:String,
-});
+const PaymentType = mongoose.model('PaymentType', PaymentTypeSchema)
 
-const PaymentType = mongoose.model('PaymentType', payment_typeSchema);
-
-export default PaymentType;
+export default PaymentType
