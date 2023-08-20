@@ -1,7 +1,7 @@
 import { MovieModel } from '../models/local-file-system/movie.js'
 import { validateMovie, validatePartialMovie } from '../schemas/movies.js'
 
-//CADA CONTROLADOR DEBERIA LLAMAR LOS METODOS QUE EXPONE MONGOOSE
+// CADA CONTROLADOR DEBERIA LLAMAR LOS METODOS QUE EXPONE MONGOOSE
 export class MovieController {
   static async getAll (req, res) {
     const { genre } = req.query
