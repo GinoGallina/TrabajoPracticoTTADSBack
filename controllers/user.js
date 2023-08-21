@@ -1,5 +1,6 @@
 import User from '../models/database/user.js'
 import bcrypt from 'bcryptjs/dist/bcrypt.js'
+import { validateUser } from '../schemas/user.js'
 const userController = {
   getAllUsers: async (req, res) => {
     try {
@@ -45,23 +46,24 @@ const userController = {
 
   createUser: async (req, res) => {
     try {
-      const { username, email, type, password, address } = req.body
+      const result = validateUser(req.body)
+      if (!result.success) {
+        // 422 Unprocessable Entity
+        return res.status(400).json({ error: JSON.parse(result.error.message) })
+      }
 
       const saltRounds = 10
-      const hashedPassword = await bcrypt.hash(password, saltRounds)
+      const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
+      result.data.password = hashedPassword
 
-      const newUser = new User({
-        username,
-        email,
-        type,
-        password: hashedPassword,
-        address
-      })
+      const newUser = new User(result.data)
+      console.log(newUser)
 
       const savedUser = await newUser.save()
       res.status(201).json({ message: 'User created', data: savedUser })
     } catch (error) {
-      res.status(500).json({ error: 'Error creating user' })
+      console.log(error)
+      res.status(500).json({ error: JSON.stringify(error) })
     }
   },
 
