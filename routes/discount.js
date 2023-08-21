@@ -11,8 +11,4 @@ discountRouter.get('/:id', DiscountController.getDiscountById)
 discountRouter.delete('/:id', DiscountController.deleteDiscountById)
 discountRouter.patch('/:id', DiscountController.updateDiscountById)
 
-<<<<<<< Updated upstream
-export default categoryRouter
-=======
 export default discountRouter
->>>>>>> Stashed changes
