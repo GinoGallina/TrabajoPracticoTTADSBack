@@ -1,14 +1,14 @@
 import { Router } from 'express'
 
-import  PaymentTypeController  from '../controllers/payment_type.js'
+import PaymentTypeController from '../controllers/payment_type.js'
 
-export const payment_typeRouter = Router()
+export const paymentTypeRouter = Router()
 
-payment_typeRouter.get('/', PaymentTypeController.getAllPaymentTypes)
-payment_typeRouter.post('/', PaymentTypeController.createPaymentType)
+paymentTypeRouter.get('/', PaymentTypeController.getAllPaymentTypes)
+paymentTypeRouter.post('/', PaymentTypeController.createPaymentType)
 
-payment_typeRouter.get('/:id', PaymentTypeController.getPaymentTypeById)
-payment_typeRouter.delete('/:id', PaymentTypeController.deletePaymentTypeById)
-payment_typeRouter.patch('/:id', PaymentTypeController.updatePaymentTypeById)
+paymentTypeRouter.get('/:id', PaymentTypeController.getPaymentTypeById)
+paymentTypeRouter.delete('/:id', PaymentTypeController.deletePaymentTypeById)
+paymentTypeRouter.patch('/:id', PaymentTypeController.updatePaymentTypeById)
 
-export default payment_typeRouter;
+export default paymentTypeRouter
