@@ -1,9 +1,10 @@
 import User from '../models/database/user.js'
 import bcrypt from 'bcryptjs/dist/bcrypt.js'
+import { validatePartialUserUpdate, validateUser } from '../schemas/user.js'
 const userController = {
   getAllUsers: async (req, res) => {
     try {
-      const users = await User.find({}).select('email address')
+      const users = await User.find({}, '-_id email address userId state type')
       res.status(200).json(users)
     } catch (error) {
       res.status(500).json({ error: 'Error getting Users' })
@@ -12,7 +13,7 @@ const userController = {
 
   getUserById: async (req, res) => {
     try {
-      const user = await User.find({ user_id: req.params.id })
+      const user = await User.find({ userId: req.params.id }, '-_id email address userId state type')
       if (!user) {
         return res.status(404).json({ error: 'User not found' })
       }
@@ -45,31 +46,47 @@ const userController = {
 
   createUser: async (req, res) => {
     try {
-      const { username, email, type, password, address } = req.body
+      const result = validateUser(req.body)
+      if (!result.success) {
+        // 422 Unprocessable Entity
+        return res.status(400).json({ error: JSON.parse(result.error.message) })
+      }
 
       const saltRounds = 10
-      const hashedPassword = await bcrypt.hash(password, saltRounds)
+      const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
+      result.data.password = hashedPassword
 
-      const newUser = new User({
-        username,
+      const newUser = new User(result.data)
+
+      const { userId, email, username, type, state } = await newUser.save()
+      const responseData = {
+        userId,
         email,
+        username,
         type,
-        password: hashedPassword,
-        address
-      })
-
-      const savedUser = await newUser.save()
-      res.status(201).json({ message: 'User created', data: savedUser })
+        state
+      }
+      res.status(201).json({ message: 'User created', data: responseData })
     } catch (error) {
-      res.status(500).json({ error: 'Error creating user' })
+      res.status(500).json({ error: JSON.stringify(error) })
     }
   },
 
   updateUserById: async (req, res) => {
     try {
+      const result = validatePartialUserUpdate(req.body)
+
+      if (!result.success) {
+        return res.status(400).json({ error: JSON.parse(result.error.message) })
+      }
+      if (result.data.password) {
+        const saltRounds = 10
+        const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
+        result.data.password = hashedPassword
+      }
       const updatedUser = await User.findOneAndUpdate(
-        { user_id: req.params.id },
-        req.body,
+        { userId: req.params.id },
+        result.data,
         { new: true }
       )
       if (!updatedUser) {
@@ -83,13 +100,15 @@ const userController = {
 
   deleteUserById: async (req, res) => {
     try {
-      const userToDelete = await User.findOne({ user_id: req.params.id })
-
-      if (!userToDelete) {
+      const updatedUser = await User.findOneAndUpdate(
+        { userId: req.params.id },
+        { state: 'Disable' },
+        { new: true }
+      )
+      if (!updatedUser) {
         return res.status(404).json({ error: 'User not found' })
       }
 
-      await User.deleteOne({ user_id: req.params.id })
       res.status(200).json({ message: 'User deleted' })
     } catch (error) {
       res.status(500).json({ error: 'Error deleting user' })

@@ -1,14 +1,14 @@
 import { Router } from 'express'
 
-import DiscountController  from '../controllers/discount.js'
+import DiscountController from '../controllers/discount.js'
 
-export const categoryRouter = Router()
+export const discountRouter = Router()
 
-categoryRouter.get('/', DiscountController.getAllDiscount)
-categoryRouter.post('/', DiscountController.createDiscount)
+discountRouter.get('/', DiscountController.getAllDiscounts)
+discountRouter.post('/', DiscountController.createDiscount)
 
-categoryRouter.get('/:id', DiscountController.getDiscountById)
-categoryRouter.delete('/:id', DiscountController.deleteDiscountById)
-categoryRouter.patch('/:id', DiscountController.updateDiscountById)
+discountRouter.get('/:id', DiscountController.getDiscountById)
+discountRouter.delete('/:id', DiscountController.deleteDiscountById)
+discountRouter.patch('/:id', DiscountController.updateDiscountById)
 
-export default categoryRouter;
+export default discountRouter

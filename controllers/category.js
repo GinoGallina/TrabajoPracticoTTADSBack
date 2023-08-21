@@ -1,12 +1,13 @@
 import Category from '../models/database/category.js'
+import { validateCategory } from '../schemas/category.js'
 
 const categoryController = {
   getAllCategories: async (req, res) => {
     try {
-      const categories = await Category.find({ deletedAt: null })
+      const categories = await Category.find({ state: 'Active' })
       res.status(200).json(categories)
     } catch (error) {
-      res.status(500).json({ error: 'Error al obtener las categorías' })
+      res.status(500).json(error)
     }
   },
 
@@ -14,89 +15,69 @@ const categoryController = {
     try {
       const category = await Category.findOne({
         _id: req.params.id,
-        deletedAt: null
+        state: 'Active'
       })
       if (!category) {
-        return res.status(404).json({ error: 'Categoría no encontrada' })
+        return res.status(404).json({ error: 'Category not found' })
       }
 
       res.status(200).json(category)
     } catch (error) {
-      res.status(500).json({ error: 'Error al obtener la categoría' })
+      res.status(500).json(JSON.stringify(error))
     }
   },
 
   createCategory: async (req, res) => {
     try {
-      const existingCategory = await Category.findOne({ category: req.body.category })
-      if (existingCategory) {
-        if (existingCategory.deletedAt !== null) {
-          existingCategory.deletedAt = null
-          await existingCategory.save()
-          return res.status(200).json({ message: 'Categoria reestablecida', data: existingCategory })
-        } else {
-          return res.status(400).json({ error: 'La categoría ya existe' })
-        }
+      const result = validateCategory(req.body)
+      if (!result.success) {
+        // 422 Unprocessable Entity
+        return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
 
-      const { category } = req.body
-      const newCategory = new Category({ category })
+      const newCategory = new Category(req.body)
       const savedCategory = await newCategory.save()
-      res.status(201).json({ message: 'Categoria creada', data: savedCategory })
+      res.status(201).json({ message: 'Category created', data: savedCategory })
     } catch (error) {
-      res.status(500).json({ error: 'Error al crear la categoría' })
+      res.status(500).json((error))
     }
   },
 
   updateCategoryById: async (req, res) => {
     try {
-      const existingCategory = await Category.findOne({
+      const updatedCategory = await Category.findOneAndUpdate({
         _id: req.params.id,
-        deletedAt: null
-      })
+        state: 'Active'
+      },
+      req.body,
+      { new: true })
 
-      if (!existingCategory) {
-        return res.status(404).json({ error: 'Categoría no encontrada' })
+      if (!updatedCategory) {
+        return res.status(404).json({ error: 'User not found' })
       }
-      const existsByCatgory = await Category.findOne({ category: req.body.category })
-      if (existsByCatgory && existsByCatgory._id.toString() !== existingCategory._id.toString()) {
-        return res.status(404).json({ error: 'La categoría ya existe' })
-      }
-
-      existingCategory.category = req.body.category
-      const updatedCategory = await existingCategory.save()
       console.log(updatedCategory)
-
       res.status(200).json(updatedCategory)
     } catch (error) {
-      res.status(500).json({ error: 'Error al actualizar la categoría' })
+      res.status(500).json(error)
     }
   },
   deleteCategoryById: async (req, res) => {
     try {
-      await Category.findByIdAndDelete(req.params.id)
-      res.status(204).send()
-    } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar la categoría' })
-    }
-  },
+      const categoryDeleted = await Category.findByIdAndUpdate(
+        { _id: req.params.id },
+        { state: 'Archived' },
+        { new: true })
 
-  logicDeleteCategoryById: async (req, res) => {
-    try {
-      const updatedCategory = await Category.findByIdAndUpdate(
-        req.params.id,
-        { new: true } // Devuelve el documento actualizado
-      )
-      console.log(updatedCategory)
-      if (!updatedCategory) {
-        return res.status(404).json({ error: 'Categoría no encontrada' })
+      if (!categoryDeleted) {
+        return res.status(404).json({ error: 'Category not found' })
       }
 
-      res.status(200).json({ message: 'Categoría eliminada lógicamente' })
+      res.status(200).json({ message: 'Category deleted', data: categoryDeleted })
     } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar la categoría' })
+      res.status(500).json(error)
     }
   }
+
 }
 
 export default categoryController
