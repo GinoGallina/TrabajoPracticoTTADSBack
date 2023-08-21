@@ -1,6 +1,6 @@
 import express, { json } from 'express' // require -> commonJS
 import categoryRouter from './routes/category.js'
-import payment_typeRouter from './routes/payment_type.js'
+import paymentTypeRouter from './routes/payment_type.js'
 import userRouter from './routes/user.js'
 // import { corsMiddleware } from './middlewares/cors.js'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -13,7 +13,7 @@ app.use(json())
 app.disable('x-powered-by')
 
 app.use('/category', categoryRouter)
-app.use('/payment_type', payment_typeRouter)
+app.use('/payment_type', paymentTypeRouter)
 
 app.use('/user', userRouter)
 const PORT = 1234
