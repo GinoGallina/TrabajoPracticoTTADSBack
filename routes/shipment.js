@@ -1,14 +1,14 @@
 import { Router } from 'express'
 
-import CategoryController from '../controllers/category.js'
+import ShipmentController from '../controllers/shipment.js'
 
-export const categoryRouter = Router()
+export const shipmentRouter = Router()
 
-categoryRouter.get('/', CategoryController.getAllCategories)
-categoryRouter.post('/', CategoryController.createCategory)
+shipmentRouter.get('/', ShipmentController.getAllShipments)
+shipmentRouter.post('/', ShipmentController.createShipment)
 
-categoryRouter.get('/:id', CategoryController.getCategoryById)
-categoryRouter.delete('/:id', CategoryController.deleteCategoryById)
-categoryRouter.patch('/:id', CategoryController.updateCategoryById)
+shipmentRouter.get('/:id', ShipmentController.getShipmentById)
+shipmentRouter.delete('/:id', ShipmentController.deleteShipmentById)
+shipmentRouter.patch('/:id', ShipmentController.updateShipmentById)
 
-export default categoryRouter
+export default shipmentRouter

@@ -54,7 +54,7 @@ const discountController = {
       { new: true })
 
       if (!updatedDiscount) {
-        return res.status(404).json({ error: 'User not found' })
+        return res.status(404).json({ error: 'Discount not found' })
       }
       console.log(updatedDiscount)
       res.status(200).json(updatedDiscount)
