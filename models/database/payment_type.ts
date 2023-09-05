@@ -6,7 +6,12 @@ const PaymentTypeSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true
-  }
+  }/*,
+  state: {
+    type: String,
+    default: 'Active',
+    required: true
+  } */
 },
 {
   timestamps: true
