@@ -1,8 +1,8 @@
 import express, { json } from 'express' // require -> commonJS
-import categoryRouter from './routes/category.js'
+import categoryRouter from './routes/category'
 import payment_typeRouter from './routes/payment_type.js'
 import userRouter from './routes/user'
-import discountRouter from './routes/discount.js'
+import discountRouter from './routes/discount'
 // import { corsMiddleware } from './middlewares/cors.js'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import db from './config/database'

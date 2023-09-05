@@ -1,8 +1,9 @@
-import Category from '../models/database/category.js'
-import { validateCategory } from '../schemas/category.js'
+import { Category, ICategoryDocument } from '../models/database/category'
+import { Request, Response } from 'express';
+import { validateCategory } from '../schemas/category'
 
 const categoryController = {
-  getAllCategories: async (req, res) => {
+  getAllCategories: async (req: Request, res: Response) => {
     try {
       const categories = await Category.find({ state: 'Active' })
       res.status(200).json(categories)
@@ -11,7 +12,7 @@ const categoryController = {
     }
   },
 
-  getCategoryById: async (req, res) => {
+  getCategoryById: async (req: Request, res: Response) => {
     try {
       const category = await Category.findOne({
         _id: req.params.id,
@@ -27,7 +28,7 @@ const categoryController = {
     }
   },
 
-  createCategory: async (req, res) => {
+  createCategory: async (req: Request, res: Response) => {
     try {
       const result = validateCategory(req.body)
       if (!result.success) {
@@ -35,7 +36,7 @@ const categoryController = {
         return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
 
-      const newCategory = new Category(req.body)
+      const newCategory: ICategoryDocument = new Category(req.body)
       const savedCategory = await newCategory.save()
       res.status(201).json({ message: 'Category created', data: savedCategory })
     } catch (error) {
@@ -43,14 +44,14 @@ const categoryController = {
     }
   },
 
-  updateCategoryById: async (req, res) => {
+  updateCategoryById: async (req: Request, res: Response) => {
     try {
       const updatedCategory = await Category.findOneAndUpdate({
         _id: req.params.id,
         state: 'Active'
       },
-      req.body,
-      { new: true })
+        req.body,
+        { new: true })
 
       if (!updatedCategory) {
         return res.status(404).json({ error: 'User not found' })
@@ -61,7 +62,7 @@ const categoryController = {
       res.status(500).json(error)
     }
   },
-  deleteCategoryById: async (req, res) => {
+  deleteCategoryById: async (req: Request, res: Response) => {
     try {
       const categoryDeleted = await Category.findByIdAndUpdate(
         { _id: req.params.id },
