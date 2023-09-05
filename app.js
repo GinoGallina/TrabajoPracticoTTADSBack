@@ -1,6 +1,6 @@
 import express, { json } from 'express' // require -> commonJS
 import categoryRouter from './routes/category.js'
-import paymentTypeRouter from './routes/payment_type.js'
+import paymentTypeRouter from './routes/payment_type'
 import userRouter from './routes/user.js'
 import discountRouter from './routes/discount.js'
 import reviewRouter from './routes/review.js'

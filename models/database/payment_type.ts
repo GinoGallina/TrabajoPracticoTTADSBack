@@ -4,14 +4,14 @@ import mongooseUniqueValidator from 'mongoose-unique-validator'
 const PaymentTypeSchema = new mongoose.Schema({
   type: {
     type: String,
-    unique: true,
-    required: true
-  }/*,
+    unique: [true, 'Cant have two Payment Types with the same name'],
+    required: [true, 'Payment Type must have a name']
+  },
   state: {
     type: String,
-    default: 'Active',
-    required: true
-  } */
+    enum: ['Active', 'Archived'],
+    default: 'Active'
+  } 
 },
 {
   timestamps: true
