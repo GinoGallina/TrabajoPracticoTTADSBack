@@ -1,57 +1,84 @@
-import { Discount } from '../models/local-file-syste/discounts.js'
+import Discount from '../models/database/discount.js'
+import { validateDiscount } from '../schemas/discount.js'
 
 const discountController = {
   getAllDiscounts: async (req, res) => {
     try {
-      const discounts = await Discount.find()
-      console.log(discounts)
+      const discounts = await Discount.find({ state: 'Active' }).populate('category')
       res.status(200).json(discounts)
     } catch (error) {
-      res.status(500).json({ error: 'Error al obtener los descuentos' })
+      console.log(error)
+      res.status(500).json(error)
     }
   },
 
   getDiscountById: async (req, res) => {
     try {
-      const discount = await Discount.findById(req.params.id)
+      const discount = await Discount.findOne({
+        _id: req.params.id,
+        state: 'Active'
+      }).populate('category')
+      if (!discount) {
+        return res.status(404).json({ error: 'Discount not found' })
+      }
+
       res.status(200).json(discount)
     } catch (error) {
-      res.status(500).json({ error: 'Error al obtener el descuento' })
+      res.status(500).json(JSON.stringify(error))
     }
   },
 
   createDiscount: async (req, res) => {
     try {
-      const { discount_id, created_date, update_date } = req.body
-      const newDiscount = new Discount({ discount_id, created_date, update_date })
+      const result = validateDiscount(req.body)
+      if (!result.success) {
+        // 422 Unprocessable Entity
+        return res.status(400).json({ error: JSON.parse(result.error.message) })
+      }
+
+      const newDiscount = new Discount(req.body)
       const savedDiscount = await newDiscount.save()
-      res.status(201).json(savedDiscount)
+      res.status(201).json({ message: 'Discount created', data: savedDiscount })
     } catch (error) {
-      res.status(500).json({ error: 'Error al crear el descuento' })
+      res.status(500).json((error))
     }
   },
 
   updateDiscountById: async (req, res) => {
     try {
-      const updatedDiscount = await Discount.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      )
+      const updatedDiscount = await Discount.findOneAndUpdate({
+        _id: req.params.id,
+        state: 'Active'
+      },
+      req.body,
+      { new: true })
+
+      if (!updatedDiscount) {
+        return res.status(404).json({ error: 'Discount not found' })
+      }
+      console.log(updatedDiscount)
       res.status(200).json(updatedDiscount)
     } catch (error) {
-      res.status(500).json({ error: 'Error al actualizar el descuento' })
+      res.status(500).json(error)
     }
   },
-
   deleteDiscountById: async (req, res) => {
     try {
-      await Discount.findByIdAndDelete(req.params.id)
-      res.status(204).send()
+      const DiscountDeleted = await Discount.findByIdAndUpdate(
+        { _id: req.params.id },
+        { state: 'Archived' },
+        { new: true })
+
+      if (!DiscountDeleted) {
+        return res.status(404).json({ error: 'Discount not found' })
+      }
+
+      res.status(200).json({ message: 'Discount deleted', data: DiscountDeleted })
     } catch (error) {
-      res.status(500).json({ error: 'Error al eliminar el descuento' })
+      res.status(500).json(error)
     }
   }
+
 }
 
 export default discountController
