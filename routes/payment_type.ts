@@ -1,6 +1,6 @@
 import { Router } from 'express'
 
-import PaymentTypeController from '../controllers/payment_type.js'
+import PaymentTypeController from '../controllers/payment_type'
 
 export const paymentTypeRouter = Router()
 

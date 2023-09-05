@@ -1,10 +1,10 @@
-import PaymentType from '../models/database/payment_type.js'
-import { validatePaymentType } from '../schemas/payment_type.js'
+import PaymentType from '../models/database/payment_type'
+import { validatePaymentType } from '../schemas/payment_type'
 
 const paymenttypeController = {
   getAllPaymentTypes: async (req, res) => {
     try {
-      const paymentTypes = await PaymentType.find()
+      const paymentTypes = await PaymentType.find({ state: 'Active'})
       res.status(200).json(paymentTypes)
     } catch (error) {
       res.status(500).json({ error: 'Error getting Payment Types' })
@@ -13,7 +13,10 @@ const paymenttypeController = {
 
   getPaymentTypeById: async (req, res) => {
     try {
-      const paymentType = await PaymentType.findById(req.params.id)
+      const paymentType = await PaymentType.findById({
+        _id: req.params.id,
+        state: 'Active'
+      })
       if (!paymentType) {
         res.status(404).json({ error: 'Payment Type not found' })
       }
@@ -28,12 +31,12 @@ const paymenttypeController = {
       const result = validatePaymentType(req.body)
       if (!result.success) {
         // 400 Bad Request
-        return res.status(400).json({ error: JSON.paser(result.error.message) })
+        return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
 
-      const newPaymentType = new PaymentType(result.data)
+      const newPaymentType = new PaymentType(req.body)
       const savedPaymentType = await newPaymentType.save()
-      res.status(201).json(savedPaymentType)
+      res.status(201).json({ message: 'Payment Type created', data: savedPaymentType} )
     } catch (error) {
       res.status(500).json({ error: 'Payment Type creation error' })
     }
@@ -41,8 +44,10 @@ const paymenttypeController = {
 
   updatePaymentTypeById: async (req, res) => {
     try {
-      const updatedPaymentType = await PaymentType.findByIdAndUpdate(
-        req.params.id,
+      const updatedPaymentType = await PaymentType.findByIdAndUpdate({
+        _id: req.params.id,
+        state: 'Active'
+      },
         req.body,
         { new: true }
       )
@@ -57,7 +62,13 @@ const paymenttypeController = {
 
   deletePaymentTypeById: async (req, res) => {
     try {
-      await PaymentType.findByIdAndDelete(req.params.id)
+      const paymentTypeDeleted = await PaymentType.findByIdAndUpdate(
+        { _id: req.params.id },
+        { state: 'Archived' },
+        { new: true })
+      if (!paymentTypeDeleted){
+        return res.status(404).json({ error: 'Payment Type not found' })
+      }
       res.status(204).send()
     } catch (error) {
       res.status(500).json({ error: 'Error deleting Payment Type' })
