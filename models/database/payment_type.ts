@@ -1,14 +1,12 @@
-import mongoose, { Model } from 'mongoose'
+import mongoose from 'mongoose'
 import mongooseUniqueValidator from 'mongoose-unique-validator'
 
-interface IPaymentType{
+interface IPaymentType extends Document{
   type: string;
   state: string;
   createdAt: Date;
   updatedAt: Date;
 }
-
-interface IPaymentTypeDocument extends IPaymentType, Document {}
 
 const PaymentTypeSchema = new mongoose.Schema({
   type: {
@@ -28,7 +26,6 @@ const PaymentTypeSchema = new mongoose.Schema({
 
 PaymentTypeSchema.plugin(mongooseUniqueValidator)
 
-//const PaymentType = mongoose.model('PaymentType', PaymentTypeSchema)
-const PaymentType: Model<IPaymentTypeDocument> = mongoose.model<IPaymentTypeDocument>('PaymentType', PaymentTypeSchema);
+const PaymentType = mongoose.model('PaymentType', PaymentTypeSchema)
 
 export default PaymentType

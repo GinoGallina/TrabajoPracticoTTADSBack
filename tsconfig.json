@@ -12,8 +12,9 @@
     "alwaysStrict": true,
     "skipLibCheck": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    
   },
-  "include": ["src/**/*", "**/*.ts"],
+  "include": ["src/**/*", "**/*.ts", "app.tsuser.tsx", "app.tsx"],
   "exclude": ["node_modules"]
 }
