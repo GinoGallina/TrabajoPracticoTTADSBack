@@ -1,8 +1,9 @@
-import Discount from '../models/database/discount.js'
-import { validateDiscount } from '../schemas/discount.js'
+import Discount from '../models/database/discount'
+import { validateDiscount } from '../schemas/discount'
+import { Request, Response } from 'express';
 
 const discountController = {
-  getAllDiscounts: async (req, res) => {
+  getAllDiscounts: async (req: Request, res:Response) => {
     try {
       const discounts = await Discount.find({ state: 'Active' }).populate('category')
       res.status(200).json(discounts)
@@ -12,7 +13,7 @@ const discountController = {
     }
   },
 
-  getDiscountById: async (req, res) => {
+  getDiscountById: async (req: Request, res:Response) => {
     try {
       const discount = await Discount.findOne({
         _id: req.params.id,
@@ -28,7 +29,7 @@ const discountController = {
     }
   },
 
-  createDiscount: async (req, res) => {
+  createDiscount: async (req: Request, res:Response) => {
     try {
       const result = validateDiscount(req.body)
       if (!result.success) {
@@ -44,7 +45,7 @@ const discountController = {
     }
   },
 
-  updateDiscountById: async (req, res) => {
+  updateDiscountById: async (req: Request, res:Response) => {
     try {
       const updatedDiscount = await Discount.findOneAndUpdate({
         _id: req.params.id,
@@ -54,7 +55,7 @@ const discountController = {
       { new: true })
 
       if (!updatedDiscount) {
-        return res.status(404).json({ error: 'Discount not found' })
+        return res.status(404).json({ error: 'User not found' })
       }
       console.log(updatedDiscount)
       res.status(200).json(updatedDiscount)
@@ -62,7 +63,7 @@ const discountController = {
       res.status(500).json(error)
     }
   },
-  deleteDiscountById: async (req, res) => {
+  deleteDiscountById: async (req: Request, res:Response) => {
     try {
       const DiscountDeleted = await Discount.findByIdAndUpdate(
         { _id: req.params.id },
