@@ -1,6 +1,6 @@
-import { Category, ICategoryDocument } from '../models/database/category'
+import { Category, ICategoryDocument } from '../models/database/category.js'
 import { Request, Response } from 'express';
-import { validateCategory } from '../schemas/category'
+import { validateCategory } from '../schemas/category.js'
 
 const categoryController = {
   getAllCategories: async (req: Request, res: Response) => {

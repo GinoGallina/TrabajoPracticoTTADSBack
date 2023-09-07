@@ -1,16 +1,15 @@
-
 import mongooseUniqueValidator from 'mongoose-unique-validator'
 
 import mongoose, { Document, Schema, Model } from 'mongoose';
 
-interface IDiscount extends Document {
+interface IDiscountDocument extends Document {
   value: number;
   state: 'Active' | 'Archived';
   category: mongoose.Schema.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
-const discountSchema : Schema<IDiscount> = new mongoose.Schema({
+const discountSchema: Schema<IDiscountDocument> = new mongoose.Schema({
   value: {
     type: Number,
     required: [true, 'Discount must have a value'],
@@ -27,6 +26,6 @@ const discountSchema : Schema<IDiscount> = new mongoose.Schema({
 })
 
 discountSchema.plugin(mongooseUniqueValidator)
-const Discount = mongoose.model('Discount', discountSchema)
+const Discount: Model<IDiscountDocument> = mongoose.model<IDiscountDocument>('Discount', discountSchema)
 
 export default Discount

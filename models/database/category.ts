@@ -2,13 +2,6 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
 
 
-interface ICategory {
-  category: string;
-  state: 'Active' | 'Archived';
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 interface ICategoryDocument extends ICategory, Document { }
 
 const categorySchema: Schema<ICategoryDocument> = new mongoose.Schema({

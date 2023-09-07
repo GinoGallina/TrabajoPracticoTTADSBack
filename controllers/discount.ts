@@ -1,5 +1,5 @@
-import Discount from '../models/database/discount'
-import { validateDiscount } from '../schemas/discount'
+import Discount from '../models/database/discount.js'
+import { validateDiscount } from '../schemas/discount.js'
 import { Request, Response } from 'express';
 
 const discountController = {

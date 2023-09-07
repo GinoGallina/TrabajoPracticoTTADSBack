@@ -1,6 +1,6 @@
 import { Router } from 'express'
 
-import DiscountController from '../controllers/discount'
+import DiscountController from '../controllers/discount.js'
 
 export const discountRouter = Router()
 

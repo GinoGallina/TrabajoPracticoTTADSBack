@@ -1,7 +1,7 @@
-import User from '../models/database/user';
+import User from '../models/database/user.js';
 import { Request, Response } from 'express';
 import * as bcrypt from 'bcryptjs';
-import { validatePartialUserUpdate, validateUser } from '../schemas/user'
+import { validatePartialUserUpdate, validateUser } from '../schemas/user.js'
 const userController = {
 
   getAllUsers: async (req: Request, res: Response) => {
