@@ -1,8 +1,9 @@
-import PaymentType from '../models/database/payment_type'
-import { validatePaymentType } from '../schemas/payment_type'
+import PaymentType from '../models/database/payment_type.js'
+import { validatePaymentType } from '../schemas/payment_type.js'
+import { Request, Response } from 'express';
 
 const paymenttypeController = {
-  getAllPaymentTypes: async (req, res) => {
+  getAllPaymentTypes: async (req: Request, res:Response) => {
     try {
       const paymentTypes = await PaymentType.find({ state: 'Active'})
       res.status(200).json(paymentTypes)
@@ -11,7 +12,7 @@ const paymenttypeController = {
     }
   },
 
-  getPaymentTypeById: async (req, res) => {
+  getPaymentTypeById: async (req: Request, res:Response) => {
     try {
       const paymentType = await PaymentType.findById({
         _id: req.params.id,
@@ -26,7 +27,7 @@ const paymenttypeController = {
     }
   },
 
-  createPaymentType: async (req, res) => {
+  createPaymentType: async (req: Request, res:Response) => {
     try {
       const result = validatePaymentType(req.body)
       if (!result.success) {
@@ -42,7 +43,7 @@ const paymenttypeController = {
     }
   },
 
-  updatePaymentTypeById: async (req, res) => {
+  updatePaymentTypeById: async (req: Request, res:Response) => {
     try {
       const updatedPaymentType = await PaymentType.findByIdAndUpdate({
         _id: req.params.id,
@@ -60,7 +61,7 @@ const paymenttypeController = {
     }
   },
 
-  deletePaymentTypeById: async (req, res) => {
+  deletePaymentTypeById: async (req: Request, res:Response) => {
     try {
       const paymentTypeDeleted = await PaymentType.findByIdAndUpdate(
         { _id: req.params.id },
