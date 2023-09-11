@@ -1,14 +1,10 @@
 import mongooseUniqueValidator from 'mongoose-unique-validator'
 
 import mongoose, { Document, Schema, Model } from 'mongoose';
+import IDiscount from '../../types/IDiscount.js';
 
-interface IDiscountDocument extends Document {
-  value: number;
-  state: 'Active' | 'Archived';
-  category: mongoose.Schema.Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
+interface IDiscountDocument extends IDiscount,Document {}
+
 const discountSchema: Schema<IDiscountDocument> = new mongoose.Schema({
   value: {
     type: Number,

@@ -1,8 +1,9 @@
-import Shipment from '../models/database/shipment.js'
+import {Shipment,IShipmentDocument} from '../models/database/shipment.js'
+import { Request, Response } from 'express';
 import { validateShipment } from '../schemas/shipment.js'
 
 const ShipmentController = {
-  getAllShipments: async (req, res) => {
+  getAllShipments: async (req:Request, res:Response) => {
     try {
       const shipments = await Shipment.find({ state: 'Active' })
       res.status(200).json(shipments)
@@ -12,9 +13,9 @@ const ShipmentController = {
     }
   },
 
-  getShipmentById: async (req, res) => {
+  getShipmentById: async (req:Request, res:Response) => {
     try {
-      const shipment = await Shipment.findOne({
+      const shipment: IShipmentDocument | null = await Shipment.findOne({
         _id: req.params.id,
         state: 'Active'
       })
@@ -25,14 +26,13 @@ const ShipmentController = {
       if (!shipment) {
         return res.status(404).json({ error: 'Shipment not found' })
       }
-
-      res.status(200).json(Shipment)
+      res.status(200).json(shipment)
     } catch (error) {
       res.status(500).json(JSON.stringify(error))
     }
   },
 
-  createShipment: async (req, res) => {
+  createShipment: async (req:Request, res:Response) => {
     try {
       const result = validateShipment(req.body)
       if (!result.success) {
@@ -40,17 +40,17 @@ const ShipmentController = {
         return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
 
-      const newShipment = new Shipment(req.body)
-      const savedShipment = await newShipment.save()
+      const newShipment: IShipmentDocument = new Shipment(req.body)
+      const savedShipment: IShipmentDocument = await newShipment.save()
       res.status(201).json({ message: 'Shipment created', data: savedShipment })
     } catch (error) {
       res.status(500).json((error))
     }
   },
 
-  updateShipmentById: async (req, res) => {
+  updateShipmentById: async (req:Request, res:Response) => {
     try {
-      const updatedShipment = await Shipment.findOneAndUpdate({
+      const updatedShipment: IShipmentDocument | null= await Shipment.findOneAndUpdate({
         _id: req.params.id,
         state: 'Active'
       },
@@ -66,9 +66,9 @@ const ShipmentController = {
       res.status(500).json(error)
     }
   },
-  deleteShipmentById: async (req, res) => {
+  deleteShipmentById: async (req:Request, res:Response) => {
     try {
-      const ShipmentDeleted = await Shipment.findByIdAndUpdate(
+      const ShipmentDeleted: IShipmentDocument | null= await Shipment.findByIdAndUpdate(
         { _id: req.params.id },
         { state: 'Archived' },
         { new: true })

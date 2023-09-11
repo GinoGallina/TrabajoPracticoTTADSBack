@@ -1,7 +1,10 @@
-import mongoose from 'mongoose'
+import mongoose, { Document,Schema,Model } from 'mongoose'
 import mongooseUniqueValidator from 'mongoose-unique-validator'
 
-const reviewSchema = new mongoose.Schema({
+
+interface IReviewDocument extends IReview, Document { }
+
+const reviewSchema: Schema<IReviewDocument> = new mongoose.Schema({
   comment: {
     type: String,
     required: [true, 'Review must have a comment']
@@ -20,6 +23,6 @@ const reviewSchema = new mongoose.Schema({
 })
 
 reviewSchema.plugin(mongooseUniqueValidator)
-const Review = mongoose.model('Review', reviewSchema)
+const Review: Model<IReviewDocument> = mongoose.model<IReviewDocument>('Review', reviewSchema)
 
-export default Review
+export {Review,IReviewDocument}

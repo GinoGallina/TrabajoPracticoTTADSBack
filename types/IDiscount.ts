@@ -7,3 +7,5 @@ interface IDiscount  {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export default IDiscount;
