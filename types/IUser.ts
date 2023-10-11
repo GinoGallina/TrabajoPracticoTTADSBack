@@ -9,3 +9,9 @@ interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+interface ISeller extends IUser {
+  cbu: string;
+  shop_name: string;
+  cuit: string;
+}
