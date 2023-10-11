@@ -1,8 +1,10 @@
-import mongoose from 'mongoose'
+import mongoose, { Schema, Document, Model } from 'mongoose'
 import mongooseUniqueValidator from 'mongoose-unique-validator'
 
-const shipmentSchema = new mongoose.Schema({
-  date: {
+interface IShipmentDocument extends IShipment, Document { }
+
+const shipmentSchema: Schema<IShipmentDocument> = new mongoose.Schema({
+  delivery_date: {
     type: Date
   },
   comment: {
@@ -18,6 +20,6 @@ const shipmentSchema = new mongoose.Schema({
 })
 
 shipmentSchema.plugin(mongooseUniqueValidator)
-const Shipment = mongoose.model('Shipment', shipmentSchema)
+const Shipment: Model<IShipmentDocument> = mongoose.model<IShipmentDocument>('Shipment', shipmentSchema)
 
-export default Shipment
+export { Shipment, IShipmentDocument }

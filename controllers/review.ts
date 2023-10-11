@@ -1,8 +1,9 @@
-import Review from '../models/database/review.js'
+import {Review,IReviewDocument} from '../models/database/review.js'
+import { Request, Response } from 'express';
 import { validateReview } from '../schemas/review.js'
 
 const ReviewController = {
-  getAllReviews: async (req, res) => {
+  getAllReviews: async (req:Request, res:Response) => {
     try {
       const reviews = await Review.find({ state: 'Active' })
       // const reviews = await Review.find({ state: 'Active' }).populate('category')
@@ -13,9 +14,9 @@ const ReviewController = {
     }
   },
 
-  getReviewById: async (req, res) => {
+  getReviewById: async (req:Request, res:Response) => {
     try {
-      const review = await Review.findOne({
+      const review: IReviewDocument | null= await Review.findOne({
         _id: req.params.id,
         state: 'Active'
       })
@@ -33,7 +34,7 @@ const ReviewController = {
     }
   },
 
-  createReview: async (req, res) => {
+  createReview: async (req:Request, res:Response) => {
     try {
       const result = validateReview(req.body)
       if (!result.success) {
@@ -41,17 +42,17 @@ const ReviewController = {
         return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
 
-      const newReview = new Review(req.body)
-      const savedReview = await newReview.save()
+      const newReview: IReviewDocument = new Review(req.body)
+      const savedReview: IReviewDocument = await newReview.save()
       res.status(201).json({ message: 'Review created', data: savedReview })
     } catch (error) {
       res.status(500).json((error))
     }
   },
 
-  updateReviewById: async (req, res) => {
+  updateReviewById: async (req:Request, res:Response) => {
     try {
-      const updatedReview = await Review.findOneAndUpdate({
+      const updatedReview: IReviewDocument | null = await Review.findOneAndUpdate({
         _id: req.params.id,
         state: 'Active'
       },
@@ -67,9 +68,9 @@ const ReviewController = {
       res.status(500).json(error)
     }
   },
-  deleteReviewById: async (req, res) => {
+  deleteReviewById: async (req:Request, res:Response) => {
     try {
-      const reviewDeleted = await Review.findByIdAndUpdate(
+      const reviewDeleted: IReviewDocument | null = await Review.findByIdAndUpdate(
         { _id: req.params.id },
         { state: 'Archived' },
         { new: true })
