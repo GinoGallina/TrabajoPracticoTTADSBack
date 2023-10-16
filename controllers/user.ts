@@ -1,7 +1,8 @@
 import User from '../models/database/user.js';
 import { Request, Response } from 'express';
-import * as bcrypt from 'bcryptjs';
+import { default as bcrypt } from 'bcryptjs'
 import { validatePartialUserUpdate, validateUser } from '../schemas/user.js'
+
 const userController = {
 
   getAllUsers: async (req: Request, res: Response) => {
@@ -24,28 +25,6 @@ getUserById: async (req: Request, res: Response) => {
       res.status(500).json({ error: 'Error getting User' });
     }
   },
-  
-  loginUser: async (req: Request, res: Response) => {
-    try {
-      const { email, password } = req.body;
-
-      const user = await User.findOne({ email });
-
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordValid) {
-        return res.status(401).json({ error: 'Incorrect password' });
-      }
-
-      res.status(200).json({ message: 'Login successful' });
-    } catch (error) {
-      res.status(500).json({ error: 'Error during login' });
-    }
-  },
 
   createUser: async (req: Request , res: Response) => {
     try {
@@ -64,7 +43,6 @@ getUserById: async (req: Request, res: Response) => {
       result.data.password = hashedPassword
 
       const newUser = new User(result.data)
-
       const { userId, email, username, type, state } = await newUser.save()
       const responseData = {
         userId,
@@ -74,8 +52,8 @@ getUserById: async (req: Request, res: Response) => {
         state
       }
       res.status(201).json({ message: 'User created', data: responseData })
-    } catch (error) {
-      res.status(500).json({ error: JSON.stringify(error) })
+    }catch (error) {
+      res.status(500).json({ error: "An unexpected error occurred." });
     }
   },
 

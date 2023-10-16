@@ -5,7 +5,6 @@ const sellerRouter = Router()
 
 sellerRouter.get('/', sellerController.getAllUsers)
 sellerRouter.post('/', sellerController.createUser)
-sellerRouter.post('/login', sellerController.loginUser)
 sellerRouter.get('/:id', sellerController.getUserById)
 sellerRouter.delete('/:id', sellerController.deleteUserById)
 sellerRouter.put('/:id', sellerController.updateUserById)

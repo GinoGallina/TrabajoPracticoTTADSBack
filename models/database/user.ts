@@ -1,6 +1,5 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
-import crypto from 'crypto';
 import { commonSchemaFields } from './schemas/userCommonSchemaFields.js';
 
 interface IUserDocument extends IUser, Document {}
