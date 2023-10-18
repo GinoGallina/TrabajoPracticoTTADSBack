@@ -9,6 +9,6 @@ categoryRouter.post('/', CategoryController.createCategory)
 
 categoryRouter.get('/:id', CategoryController.getCategoryById)
 categoryRouter.delete('/:id', CategoryController.deleteCategoryById)
-categoryRouter.patch('/:id', CategoryController.updateCategoryById)
+categoryRouter.put('/:id', CategoryController.updateCategoryById)
 
 export default categoryRouter

@@ -1,11 +1,14 @@
 import { Category, ICategoryDocument } from '../models/database/category.js'
 import { Request, Response } from 'express';
 import { validateCategory } from '../schemas/category.js'
+import { CategoryRepository } from './../repository/categoryRepository.js';
+
+const categoryRepository = new CategoryRepository()
 
 const categoryController = {
   getAllCategories: async (req: Request, res: Response) => {
     try {
-      const categories = await Category.find({ state: 'Active' })
+      const categories = await categoryRepository.findAll();
       res.status(200).json(categories)
     } catch (error) {
       res.status(500).json(error)
@@ -14,10 +17,8 @@ const categoryController = {
 
   getCategoryById: async (req: Request, res: Response) => {
     try {
-      const category = await Category.findOne({
-        _id: req.params.id,
-        state: 'Active'
-      })
+      const id = req.params.id
+      const category = await categoryRepository.findOne({id})
       if (!category) {
         return res.status(404).json({ error: 'Category not found' })
       }
@@ -35,9 +36,7 @@ const categoryController = {
         // 422 Unprocessable Entity
         return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
-
-      const newCategory: ICategoryDocument = new Category(req.body)
-      const savedCategory = await newCategory.save()
+      const savedCategory = await categoryRepository.add(req.body)
       res.status(201).json({ message: 'Category created', data: savedCategory })
     } catch (error) {
       res.status(500).json((error))
@@ -46,17 +45,11 @@ const categoryController = {
 
   updateCategoryById: async (req: Request, res: Response) => {
     try {
-      const updatedCategory = await Category.findOneAndUpdate({
-        _id: req.params.id,
-        state: 'Active'
-      },
-        req.body,
-        { new: true })
-
+  
+      const updatedCategory = await categoryRepository.update(req.params.id, req.body)
       if (!updatedCategory) {
-        return res.status(404).json({ error: 'User not found' })
+        return res.status(404).json({ error: 'Category not found' })
       }
-      console.log(updatedCategory)
       res.status(200).json(updatedCategory)
     } catch (error) {
       res.status(500).json(error)
@@ -64,11 +57,8 @@ const categoryController = {
   },
   deleteCategoryById: async (req: Request, res: Response) => {
     try {
-      const categoryDeleted = await Category.findByIdAndUpdate(
-        { _id: req.params.id },
-        { state: 'Archived' },
-        { new: true })
-
+      const id = req.params.id
+      const categoryDeleted = await categoryRepository.delete({ id })
       if (!categoryDeleted) {
         return res.status(404).json({ error: 'Category not found' })
       }
