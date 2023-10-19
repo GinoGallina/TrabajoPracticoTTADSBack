@@ -38,6 +38,7 @@ const categoryController = {
           .status(400)
           .json({ error: JSON.parse(result.error.message) });
       }
+      //VALIDAR CON MODEL
       const savedCategory = await categoryRepository.add(req.body);
       res
         .status(201)

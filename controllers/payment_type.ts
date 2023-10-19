@@ -35,6 +35,7 @@ const paymenttypeController = {
       const result = validatePaymentType(req.body)
       if (!result.success) {
         // 400 Bad Request
+        console.log(result.error.message)
         return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
 
