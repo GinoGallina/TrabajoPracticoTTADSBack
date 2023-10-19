@@ -7,9 +7,9 @@ import shipmentRouter from './routes/shipment.js'
 import reviewRouter from './routes/review.js'
 // import { corsMiddleware } from './middlewares/cors.js'
 // eslint-disable-next-line no-unused-vars
+import cors from 'cors';
 import db from './config/database.js'
 import sellerRouter from './routes/seller.js'
-import cors from 'cors';
 import loginRouter from './routes/login.js'
 
 // La asigno para que Eslint no de me problemas

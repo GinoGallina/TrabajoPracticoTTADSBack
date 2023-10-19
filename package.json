@@ -37,7 +37,7 @@
     "extends": "standard"
   },
   "dependencies": {
-    "@types/cors": "^2.8.14",
+    "@types/cors": "^2.8.15",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

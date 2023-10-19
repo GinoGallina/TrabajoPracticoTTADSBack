@@ -36,7 +36,7 @@ const discountController = {
           .status(400)
           .json({ error: JSON.parse(result.error.message) });
       }
-
+      //VALIDAR CON MODEL
       const savedDiscount = await discountReposirory.add(req.body);
       res
         .status(201)

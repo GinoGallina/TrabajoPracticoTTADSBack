@@ -4,3 +4,5 @@ interface IPaymentType extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export default IPaymentType;
