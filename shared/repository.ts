@@ -1,4 +1,3 @@
-import { Category } from "../models/database/category.js";
 
 export interface Repository<T> {
   findAll(): Promise<T[] | undefined>

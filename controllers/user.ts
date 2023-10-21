@@ -1,22 +1,25 @@
-import User from '../models/database/user.js';
 import { Request, Response } from 'express';
 import { default as bcrypt } from 'bcryptjs'
 import { validatePartialUserUpdate, validateUser } from '../schemas/user.js'
+import { UserRepository } from '../repository/userRepository.js';
+
+const userRepository = new UserRepository()
 
 const userController = {
 
   getAllUsers: async (req: Request, res: Response) => {
     try {
-      const users = await User.find({}, '-_id email address userId state type');
+      const users = await userRepository.findAll();
       res.status(200).json(users);
     } catch (error) {
       res.status(500).json({ error: 'Error getting Users' });
     }
   },
 
-getUserById: async (req: Request, res: Response) => {
+  getUserById: async (req: Request, res: Response) => {
     try {
-      const user = await User.findOne({ userId: req.params.id }, '-_id email address userId state type');
+      const id = req.params.id
+      const user = await userRepository.findOne({id});
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -26,15 +29,15 @@ getUserById: async (req: Request, res: Response) => {
     }
   },
 
-  createUser: async (req: Request , res: Response) => {
+  createUser: async (req: Request, res: Response) => {
     try {
       const result = validateUser(req.body)
       if (!result.success) {
         const errorMessage = result.error?.message;
         if (errorMessage) {
-            return res.status(400).json({ error: JSON.parse(errorMessage) });
+          return res.status(400).json({ error: JSON.parse(errorMessage) });
         } else {
-            return res.status(400).json({ error: "Unexpected Error" });
+          return res.status(400).json({ error: "Unexpected Error" });
         }
       }
 
@@ -42,17 +45,22 @@ getUserById: async (req: Request, res: Response) => {
       const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
       result.data.password = hashedPassword
 
-      const newUser = new User(result.data)
-      const { userId, email, username, type, state } = await newUser.save()
-      const responseData = {
-        userId,
-        email,
-        username,
-        type,
-        state
+      const user: IUser | undefined  =  await userRepository.add(result.data);
+      if(!user){
+        return res.status(500).json({ error: "Error creating user." });
+      }
+
+      const responseData :IUserResponse = {
+        userId: user.userId,
+        email: user.email,
+        username: user.username,
+        type: user.type,
+        state: user.state,
+        address: user.address
       }
       res.status(201).json({ message: 'User created', data: responseData })
-    }catch (error) {
+    } catch (error) {
+      console.error(error)
       res.status(500).json({ error: "An unexpected error occurred." });
     }
   },
@@ -64,21 +72,18 @@ getUserById: async (req: Request, res: Response) => {
       if (!result.success) {
         const errorMessage = result.error?.message;
         if (errorMessage) {
-            return res.status(400).json({ error: JSON.parse(errorMessage) });
+          return res.status(400).json({ error: JSON.parse(errorMessage) });
         } else {
-            return res.status(400).json({ error: "Unexpected Error" });
-        }      
+          return res.status(400).json({ error: "Unexpected Error" });
+        }
       }
       if (result.data.password) {
         const saltRounds = 10
         const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
         result.data.password = hashedPassword
       }
-      const updatedUser = await User.findOneAndUpdate(
-        { userId: req.params.id },
-        result.data,
-        { new: true }
-      )
+
+      const updatedUser = await userRepository.update(req.params.id,result.data);
       if (!updatedUser) {
         return res.status(404).json({ error: 'User not found' })
       }
@@ -90,11 +95,8 @@ getUserById: async (req: Request, res: Response) => {
 
   deleteUserById: async (req: Request, res: Response) => {
     try {
-      const updatedUser = await User.findOneAndUpdate(
-        { userId: req.params.id },
-        { state: 'Disable' },
-        { new: true }
-      )
+      const id = req.params.id
+      const updatedUser = await userRepository.delete({id})
       if (!updatedUser) {
         return res.status(404).json({ error: 'User not found' })
       }

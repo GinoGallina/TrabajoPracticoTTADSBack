@@ -1,6 +1,6 @@
 import { default as bcrypt } from 'bcryptjs'
-import User from '../models/database/user.js';
 import { Request, Response } from 'express';
+import { User } from '../models/database/user.js';
 
 
 export const loginController = {

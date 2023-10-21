@@ -11,4 +11,4 @@ userSchema.plugin(mongooseUniqueValidator);
 
 const User: Model<IUserDocument> = mongoose.model<IUserDocument>('User', userSchema);
 
-export default User;
+export { User, IUserDocument }
