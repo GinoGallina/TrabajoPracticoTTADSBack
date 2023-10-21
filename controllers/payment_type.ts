@@ -2,7 +2,7 @@ import PaymentType from '../models/database/payment_type'
 import { validatePaymentType } from '../schemas/payment_type'
 
 const paymenttypeController = {
-  getAllPaymentTypes: async (req, res) => {
+  getAllPaymentTypes: async (req: Request, res: Response) => {
     try {
       const paymentTypes = await PaymentType.find({ state: 'Active'})
       res.status(200).json(paymentTypes)
