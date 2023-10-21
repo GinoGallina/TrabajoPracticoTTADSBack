@@ -1,12 +1,14 @@
-import {Review,IReviewDocument} from '../models/database/review.js'
+import { Review,IReviewDocument} from '../models/database/review.js'
 import { Request, Response } from 'express';
-import { validateReview } from '../schemas/review.js'
+import { validateReview } from '../schemas/review.js';
+import { ReviewRepository } from "./../repository/reviewRepository.js";
+
+const reviewRepository = new ReviewRepository();
 
 const ReviewController = {
   getAllReviews: async (req:Request, res:Response) => {
     try {
-      const reviews = await Review.find({ state: 'Active' })
-      // const reviews = await Review.find({ state: 'Active' }).populate('category')
+      const reviews = await reviewRepository.findAll();
       res.status(200).json(reviews)
     } catch (error) {
       console.log(error)
@@ -16,14 +18,7 @@ const ReviewController = {
 
   getReviewById: async (req:Request, res:Response) => {
     try {
-      const review: IReviewDocument | null= await Review.findOne({
-        _id: req.params.id,
-        state: 'Active'
-      })
-      /* const review = await Review.findOne({
-        _id: req.params.id,
-        state: 'Active'
-      }).populate('order') */
+      const review = await reviewRepository.findOne({ id: req.params.id })
       if (!review) {
         return res.status(404).json({ error: 'Review not found' })
       }
@@ -42,8 +37,7 @@ const ReviewController = {
         return res.status(400).json({ error: JSON.parse(result.error.message) })
       }
 
-      const newReview: IReviewDocument = new Review(req.body)
-      const savedReview: IReviewDocument = await newReview.save()
+      const savedReview = await reviewRepository.add(req.body);
       res.status(201).json({ message: 'Review created', data: savedReview })
     } catch (error) {
       res.status(500).json((error))
@@ -52,17 +46,14 @@ const ReviewController = {
 
   updateReviewById: async (req:Request, res:Response) => {
     try {
-      const updatedReview: IReviewDocument | null = await Review.findOneAndUpdate({
-        _id: req.params.id,
-        state: 'Active'
-      },
-      req.body,
-      { new: true })
+      const updatedReview= await reviewRepository.update(
+        req.params.id,
+        req.body
+      );
 
       if (!updatedReview) {
         return res.status(404).json({ error: 'Review not found' })
       }
-      console.log(updatedReview)
       res.status(200).json(updatedReview)
     } catch (error) {
       res.status(500).json(error)
@@ -70,11 +61,7 @@ const ReviewController = {
   },
   deleteReviewById: async (req:Request, res:Response) => {
     try {
-      const reviewDeleted: IReviewDocument | null = await Review.findByIdAndUpdate(
-        { _id: req.params.id },
-        { state: 'Archived' },
-        { new: true })
-
+      const reviewDeleted = await reviewRepository.delete({ id: req.params.id });
       if (!reviewDeleted) {
         return res.status(404).json({ error: 'Review not found' })
       }
