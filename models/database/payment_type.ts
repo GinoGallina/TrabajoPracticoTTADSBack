@@ -1,19 +1,13 @@
-import mongoose, { Model } from 'mongoose'
+import mongoose, { Document, Schema, Model } from 'mongoose'
 import mongooseUniqueValidator from 'mongoose-unique-validator'
+import IPaymentType from '../../types/IPaymentType.js';
 
-interface IPaymentType{
-  type: string;
-  state: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+interface IPaymentTypeDocuemnt extends IPaymentType, Document{}
 
-interface IPaymentTypeDocument extends IPaymentType, Document {}
-
-const PaymentTypeSchema = new mongoose.Schema({
+const PaymentTypeSchema: Schema<IPaymentTypeDocuemnt> = new mongoose.Schema({
   type: {
     type: String,
-    unique: [true, 'Cant have two Payment Types with the same name'],
+    unique: true,
     required: [true, 'Payment Type must have a name']
   },
   state: {
@@ -28,7 +22,6 @@ const PaymentTypeSchema = new mongoose.Schema({
 
 PaymentTypeSchema.plugin(mongooseUniqueValidator)
 
-//const PaymentType = mongoose.model('PaymentType', PaymentTypeSchema)
-const PaymentType: Model<IPaymentTypeDocument> = mongoose.model<IPaymentTypeDocument>('PaymentType', PaymentTypeSchema);
+const PaymentType: Model<IPaymentTypeDocuemnt> = mongoose.model<IPaymentTypeDocuemnt>('PaymentType', PaymentTypeSchema)
 
-export default PaymentType
+export  { PaymentType, IPaymentTypeDocuemnt }
