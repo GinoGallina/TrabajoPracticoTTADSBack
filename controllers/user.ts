@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { default as bcrypt } from 'bcryptjs'
 import { validatePartialUserUpdate, validateUser } from '../schemas/user.js'
 import { UserRepository } from '../repository/userRepository.js';
+import { UserFilter } from '../types/filters/UserFilter.js';
 
 const userRepository = new UserRepository()
 
@@ -9,7 +10,8 @@ const userController = {
 
   getAllUsers: async (req: Request, res: Response) => {
     try {
-      const users = await userRepository.findAll();
+      const filter : UserFilter = req.query as UserFilter;
+      const users = await userRepository.findAll(filter);
       res.status(200).json(users);
     } catch (error) {
       res.status(500).json({ error: 'Error getting Users' });
@@ -44,7 +46,6 @@ const userController = {
       const saltRounds = 10
       const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
       result.data.password = hashedPassword
-
       const user: IUser | undefined  =  await userRepository.add(result.data);
       if(!user){
         return res.status(500).json({ error: "Error creating user." });

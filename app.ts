@@ -11,6 +11,7 @@ import cors from 'cors';
 import db from './config/database.js'
 import sellerRouter from './routes/seller.js'
 import loginRouter from './routes/login.js'
+import productRouter from './routes/product.js'
 
 // La asigno para que Eslint no de me problemas
 const conection=db;
@@ -25,6 +26,8 @@ app.disable('x-powered-by')
 
 app.use('/category', categoryRouter)
 app.use('/payment_type', payment_typeRouter)
+app.use('/products', productRouter)
+
 app.use('/user', userRouter)
 app.use('/seller', sellerRouter)
 app.use('/login', loginRouter)

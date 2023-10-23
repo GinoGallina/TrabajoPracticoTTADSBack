@@ -1,15 +1,17 @@
 import  {User, IUserDocument } from "../models/database/user.js"
-import { Repository } from "../shared/repository.js"
+import { IUserRepository } from "../shared/IUserRepository.js";
+import { UserFilter } from "../types/filters/UserFilter.js";
 
-export class UserRepository implements Repository<IUser> {
+export class UserRepository implements IUserRepository<IUser> {
 
-  public async findAll(): Promise<IUser[] | undefined> {
-    return await User.find({}, '-_id email address userId state type');
+  public async findAll(filters: UserFilter): Promise<IUser[] | undefined> {
+
+    return await User.find(filters, '-_id email address userId state type cbu shop_name cuit');
   }
   
  public async findOne(item: { id: string }): Promise<IUser | undefined> {
     const _id = new Object(item.id)
-    return ( await User.findOne({ userId: _id }, '-_id email address userId state type')) || undefined
+    return ( await User.findOne({ userId: _id }, '-_id email address userId state type cbu shop_name cuit')) || undefined
   }
   
   public async add(user: IUser): Promise<IUser | undefined> {

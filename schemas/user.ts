@@ -17,7 +17,10 @@ const userSchema = z.object({
   type: UserTypeSchema,
   password: z.string().min(6),
   address: z.string(),
-  state: UserStateSchema
+  state: UserStateSchema.optional(),
+  cbu: z.string().optional(),
+  shop_name: z.string().optional(),
+  cuit: z.string().optional(),
 });
 
 const userUpdateSchema = userSchema.pick({
