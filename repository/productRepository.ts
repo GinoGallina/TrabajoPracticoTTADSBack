@@ -4,11 +4,15 @@ import { IProductRepository } from "../shared/IProductRepository.js"
 export class ProductRepository implements IProductRepository<IProduct> {
   public async findAll(): Promise<IProduct[] | undefined> {
     return await Product.find()
+                        .populate("seller",'email state cbu shop_name')
+                        .populate("category", "category");
   }
   
  public async findOne(item: { id: string }): Promise<IProduct | undefined> {
     const _id = new Object(item.id)
-    return (await Product.findOne({ _id })) || undefined
+    return (await Product.findOne({ _id })
+                        .populate("seller",'email state cbu shop_name')
+                        .populate("category", "category"))|| undefined
   }
   
   public async add(product: IProduct): Promise<IProduct | undefined> {

@@ -52,7 +52,6 @@ const userController = {
       }
 
       const responseData :IUserResponse = {
-        userId: user.userId,
         email: user.email,
         username: user.username,
         type: user.type,

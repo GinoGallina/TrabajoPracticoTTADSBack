@@ -1,6 +1,5 @@
 import mongoose, { Document, Schema, Model } from 'mongoose';
 import mongooseUniqueValidator from 'mongoose-unique-validator';
-import crypto from "crypto"
 
 interface IUserDocument extends IUser, Document {}
 
@@ -10,11 +9,6 @@ function isSellerType(this:IUserDocument): boolean {
 
 
 export const userSchema =  new Schema({
-  userId: {
-    type: String,
-    default: () => crypto.randomUUID(),
-    unique: true,
-  },
   username: { type: String, required: true, unique: true, uniqueCaseInsensitive: true, trim: true },
   email: {
     type: String,

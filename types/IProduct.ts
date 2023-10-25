@@ -1,5 +1,7 @@
+
 interface IProduct {
-    seller_id: string;
+    seller: string;
+    category: string;
     name: string;
     description: string;
     price: string;
@@ -9,3 +11,4 @@ interface IProduct {
     createdAt: Date;
     updatedAt: Date;
 }
+

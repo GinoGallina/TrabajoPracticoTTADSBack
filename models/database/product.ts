@@ -1,14 +1,12 @@
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongooseUniqueValidator from 'mongoose-unique-validator'
 
 interface IProductDocument extends IProduct, Document {}
 
 const productSchema = new Schema({
-    seller_id: {
-        type: String,
-        required: true,
-        seller: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-    },
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     name: {
         type: String,
         required: true
@@ -38,8 +36,10 @@ const productSchema = new Schema({
 {
     timestamps: true
 });
+productSchema.index({ name: 1, seller_id: 1 }, { unique: true });
 
-
+productSchema.plugin(mongooseUniqueValidator, {
+    message: 'Error, product has to be unique.'
+});
 const Product: Model<IProductDocument> = mongoose.model<IProductDocument>('Product', productSchema)
-
 export  {Product , IProductDocument};

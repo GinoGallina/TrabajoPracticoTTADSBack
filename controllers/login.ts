@@ -22,7 +22,6 @@ export const loginController = {
       }
 
       const userResponse: IUserResponse = {
-        userId: user.userId,
         email: user.email,
         username: user.username,
         type: user.type,

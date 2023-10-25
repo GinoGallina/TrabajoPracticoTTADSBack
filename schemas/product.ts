@@ -2,7 +2,8 @@ import { z } from 'zod';
 import StateSchema from '../types/states.js';
 
 const productSchema = z.object({
-  seller_id: z.string(),
+  seller: z.string(),
+  category: z.string(),
   name: z.string(),
   description: z.string(),
   price: z.string(),

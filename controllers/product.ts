@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { ProductRepository } from "../repository/productRepository.js";
 import { validateProduct } from "../schemas/product.js";
+import { ProductService } from "../services/productService.js";
 
 const productRepository = new ProductRepository();
-
 const ProductController = {
   getAllProducts: async (req: Request, res: Response) => {
     try {
@@ -33,15 +33,13 @@ const ProductController = {
       const result = validateProduct(req.body);
       if (!result.success) {
         // 422 Unprocessable Entity
-        return res
-          .status(400)
-          .json({ error: JSON.parse(result.error.message) });
+        return res.status(400).json({ error: JSON.parse(result.error.message)});
       }
-      //VALIDAR CON MODEL
-      const savedProduct = await productRepository.add(req.body);
-      res
-        .status(201)
-        .json({ message: "Product created", data: savedProduct });
+      const serviceResult = await ProductService.create(req.body);
+      if (!serviceResult.success) {
+          return res.status(400).json({ error: serviceResult.message });
+      }
+      res.status(201).json({ message: "Product created", data: serviceResult.data });
     } catch (error) {
       res.status(500).json(error);
     }
