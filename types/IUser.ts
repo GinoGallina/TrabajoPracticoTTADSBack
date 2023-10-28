@@ -1,4 +1,4 @@
-interface IUser{
+interface IUser {
   username: string;
   email: string;
   type: string;

@@ -33,13 +33,17 @@ const ProductController = {
       const result = validateProduct(req.body);
       if (!result.success) {
         // 422 Unprocessable Entity
-        return res.status(400).json({ error: JSON.parse(result.error.message)});
+        return res
+          .status(400)
+          .json({ error: JSON.parse(result.error.message) });
       }
       const serviceResult = await ProductService.create(req.body);
       if (!serviceResult.success) {
-          return res.status(400).json({ error: serviceResult.message });
+        return res.status(400).json({ error: serviceResult.message });
       }
-      res.status(201).json({ message: "Product created", data: serviceResult.data });
+      res
+        .status(201)
+        .json({ message: "Product created", data: serviceResult.data });
     } catch (error) {
       res.status(500).json(error);
     }
@@ -49,7 +53,7 @@ const ProductController = {
     try {
       const updatedProduct = await productRepository.update(
         req.params.id,
-        req.body
+        req.body,
       );
       if (!updatedProduct) {
         return res.status(404).json({ error: "Product not found" });

@@ -18,13 +18,13 @@ const discountSchema: Schema<IDiscountDocument> = new mongoose.Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+  },
 );
 
 discountSchema.plugin(mongooseUniqueValidator);
 const Discount: Model<IDiscountDocument> = mongoose.model<IDiscountDocument>(
   "Discount",
-  discountSchema
+  discountSchema,
 );
 
 export { Discount, IDiscountDocument };

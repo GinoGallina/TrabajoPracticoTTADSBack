@@ -4,5 +4,4 @@ interface IUserResponse {
   type: string;
   address: string;
   state: string;
-  
 }

@@ -19,7 +19,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
 
   public async update(
     id: string,
-    discount: IDiscount
+    discount: IDiscount,
   ): Promise<IDiscount | undefined> {
     return (
       (await Discount.findOneAndUpdate(
@@ -28,7 +28,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
           state: "Active",
         },
         discount,
-        { new: true }
+        { new: true },
       )) || undefined
     );
   }
@@ -37,7 +37,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
       (await Discount.findByIdAndUpdate(
         { _id: item.id },
         { state: "Archived" },
-        { new: true }
+        { new: true },
       )) || undefined
     );
   }
