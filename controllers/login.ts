@@ -27,7 +27,7 @@ export const loginController = {
         state: user.state,
       };
 
-      res.status(200).json({ user: userResponse });
+                res.status(200).json({ user: userResponse });
     } catch (error) {
       res.status(500).json({ error: "Error during login" });
     }
