@@ -53,7 +53,7 @@ const ProductController = {
     try {
       const updatedProduct = await productRepository.update(
         req.params.id,
-        req.body,
+        req.body
       );
       if (!updatedProduct) {
         return res.status(404).json({ error: "Product not found" });
