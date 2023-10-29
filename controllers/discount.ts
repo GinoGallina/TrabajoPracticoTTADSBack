@@ -50,7 +50,7 @@ const discountController = {
     try {
       const updatedDiscount = await discountReposirory.update(
         req.params.id,
-        req.body,
+        req.body
       );
 
       if (!updatedDiscount) {

@@ -52,7 +52,7 @@ const categoryController = {
     try {
       const updatedCategory = await categoryRepository.update(
         req.params.id,
-        req.body,
+        req.body
       );
       if (!updatedCategory) {
         return res.status(404).json({ error: "Category not found" });

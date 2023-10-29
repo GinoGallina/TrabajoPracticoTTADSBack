@@ -18,13 +18,20 @@ const categorySchema: Schema<ICategoryDocument> = new mongoose.Schema(
   },
   {
     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  },
+  }
 );
 
 categorySchema.plugin(mongooseUniqueValidator);
+categorySchema.virtual("discounts", {
+  ref: "Discount",
+  localField: "_id",
+  foreignField: "category",
+});
+categorySchema.set("toObject", { virtuals: true });
+categorySchema.set("toJSON", { virtuals: true });
 const Category: Model<ICategoryDocument> = mongoose.model<ICategoryDocument>(
   "Category",
-  categorySchema,
+  categorySchema
 );
 
 export { Category, ICategoryDocument };

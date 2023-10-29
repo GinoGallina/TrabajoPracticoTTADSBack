@@ -3,12 +3,24 @@ import { Repository } from "../shared/repository.js";
 
 export class CategoryRepository implements Repository<ICategory> {
   public async findAll(): Promise<ICategory[] | undefined> {
-    return await Category.find({ state: "Active" });
+    return (
+      (await Category.find().populate({
+        path: "discounts",
+        model: "Discount",
+        select: "_id value createdAt updatedAt -category",
+      })) || undefined
+    );
   }
 
   public async findOne(item: { id: string }): Promise<ICategory | undefined> {
     const _id = new Object(item.id);
-    return (await Category.findOne({ _id })) || undefined;
+    return (
+      (await Category.findOne({ _id }).populate({
+        path: "discounts",
+        model: "Discount",
+        select: "_id value createdAt updatedAt -category",
+      })) || undefined
+    );
   }
 
   public async add(category: ICategory): Promise<ICategory | undefined> {
@@ -18,7 +30,7 @@ export class CategoryRepository implements Repository<ICategory> {
 
   public async update(
     id: string,
-    category: ICategory,
+    category: ICategory
   ): Promise<ICategory | undefined> {
     return (
       (await Category.findOneAndUpdate(
@@ -27,7 +39,7 @@ export class CategoryRepository implements Repository<ICategory> {
           state: "Active",
         },
         category,
-        { new: true },
+        { new: true }
       )) || undefined
     );
   }
@@ -37,7 +49,7 @@ export class CategoryRepository implements Repository<ICategory> {
       (await Category.findByIdAndUpdate(
         { _id: item.id },
         { state: "Archived" },
-        { new: true },
+        { new: true }
       )) || undefined
     );
   }

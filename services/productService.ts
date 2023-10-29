@@ -1,4 +1,3 @@
-import { boolean } from "yargs";
 import { ProductRepository } from "../repository/productRepository.js";
 import { UserRepository } from "../repository/userRepository.js";
 
