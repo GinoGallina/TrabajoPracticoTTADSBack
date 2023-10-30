@@ -3,6 +3,7 @@ import { validateDiscount } from "../schemas/discount.js";
 import { Request, Response } from "express";
 
 const discountReposirory = new DiscountReposirory();
+
 const discountController = {
   getAllDiscounts: async (req: Request, res: Response) => {
     try {

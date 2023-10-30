@@ -4,7 +4,7 @@ import IDiscount from "../types/IDiscount.js";
 
 export class DiscountReposirory implements Repository<IDiscount> {
   public async findAll(): Promise<IDiscount[] | undefined> {
-    return await Discount.find({ state: "active" }).populate("category");
+    return await Discount.find({ state: "Active" }).populate("category");
   }
 
   public async findOne(item: { id: string }): Promise<IDiscount | undefined> {
@@ -19,7 +19,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
 
   public async update(
     id: string,
-    discount: IDiscount,
+    discount: IDiscount
   ): Promise<IDiscount | undefined> {
     return (
       (await Discount.findOneAndUpdate(
@@ -28,7 +28,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
           state: "Active",
         },
         discount,
-        { new: true },
+        { new: true }
       )) || undefined
     );
   }
@@ -37,7 +37,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
       (await Discount.findByIdAndUpdate(
         { _id: item.id },
         { state: "Archived" },
-        { new: true },
+        { new: true }
       )) || undefined
     );
   }

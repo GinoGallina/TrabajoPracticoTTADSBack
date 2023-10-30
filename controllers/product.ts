@@ -2,13 +2,15 @@ import { Request, Response } from "express";
 import { ProductRepository } from "../repository/productRepository.js";
 import { validateProduct } from "../schemas/product.js";
 import { ProductService } from "../services/productService.js";
+import { ProductFilter } from "../types/filters/ProductFilter.js";
 
 const productRepository = new ProductRepository();
 const ProductController = {
   getAllProducts: async (req: Request, res: Response) => {
     try {
-      const categories = await productRepository.findAll();
-      res.status(200).json(categories);
+      const filter: ProductFilter = req.query as ProductFilter;
+      const products = await productRepository.findAll(filter);
+      res.status(200).json(products);
     } catch (error) {
       res.status(500).json(error);
     }
