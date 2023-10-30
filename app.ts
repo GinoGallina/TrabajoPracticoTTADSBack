@@ -13,6 +13,11 @@ import sellerRouter from "./routes/seller.js";
 import loginRouter from "./routes/login.js";
 import productRouter from "./routes/product.js";
 
+//dotenv
+import './config/env.js'
+import { authRouter } from "./routes/auth.js";
+
+
 // La asigno para que Eslint no de me problemas
 const conection = db;
 
@@ -34,6 +39,9 @@ app.use("/login", loginRouter);
 app.use("/discount", discountRouter);
 app.use("/shipment", shipmentRouter);
 app.use("/review", reviewRouter);
+
+app.use('/auth',authRouter);
+
 const PORT = 1234;
 
 app.listen(PORT, () => {

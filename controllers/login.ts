@@ -1,6 +1,7 @@
 import { default as bcrypt } from "bcryptjs";
 import { Request, Response } from "express";
 import { User } from "../models/database/user.js";
+import TokenManager from "../config/token.js";
 
 export const loginController = {
   loginUser: async (req: Request, res: Response) => {
@@ -26,8 +27,15 @@ export const loginController = {
         address: user.address,
         state: user.state,
       };
+        const secret: string | undefined= process.env.SECRET_KEY;
+        if (!secret) {
+            return res.status(500).json({ error: "Error during login" });
+        }
+        
+        const tokenManager = new TokenManager(secret); // Usa tu secreto
+        const token = tokenManager.generateToken( userResponse , '3h'); // Genera el token
 
-      res.status(200).json({ user: userResponse });
+      res.status(200).json(token);
     } catch (error) {
       res.status(500).json({ error: "Error during login" });
     }
