@@ -53,7 +53,7 @@ const userController = {
         return res.status(500).json({ error: "Error creating user." });
       }
 
-      const responseData: IUserResponse = {
+      const responseData: any = {
         email: user.email,
         username: user.username,
         type: user.type,

@@ -21,6 +21,7 @@ export const loginController = {
       }
 
       const userResponse: IUserResponse = {
+        _id:user._id,
         email: user.email,
         username: user.username,
         type: user.type,
