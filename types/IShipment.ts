@@ -5,5 +5,4 @@ interface IShipment {
   situation: "Pending" | "In Transit" | "Delivered";
   createdAt: Date;
   updatedAt: Date;
-  //FALTA ORDEN
 }
