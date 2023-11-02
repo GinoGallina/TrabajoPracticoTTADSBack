@@ -5,12 +5,22 @@ interface IShipmentDocument extends IShipment, Document {}
 
 const shipmentSchema: Schema<IShipmentDocument> = new mongoose.Schema(
   {
+    
+    shipment_type: {
+      type: String,
+      required: [true, "Shipment Type cannot be empty"],
+    },
+    delivery_address: {
+      type: String,
+      required: false
+    },
     delivery_date: {
       type: Date,
+      required: false
     },
     comment: {
       type: String,
-      required: [true, "Review must have a comment"],
+      required: false,
     },
     state: { type: String, enum: ["Active", "Archived"], default: "Active" },
     situation: {

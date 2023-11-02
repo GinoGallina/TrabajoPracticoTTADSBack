@@ -34,6 +34,12 @@ const ShipmentController = {
 
   createShipment: async (req: Request, res: Response) => {
     try {
+      
+      const {delivery_date} = req.body;
+      if(delivery_date){
+        req.body.delivery_date = new Date(delivery_date);
+      }
+      
       const result = validateShipment(req.body);
       if (!result.success) {
         // 422 Unprocessable Entity

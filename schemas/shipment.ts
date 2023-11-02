@@ -1,13 +1,27 @@
 import { z } from "zod";
 
 const shipmentSchema = z.object({
-  delivery_date: z.union([z.date(), z.null()]),
+  shipment_type: z
+    .string()
+    .min(5, "D is too short")
+    .refine((value) => value.trim().length > 0, {
+      message: "Comment cannot be empty or contain only spaces",
+    }),
+  delivery_address: z.
+    string()
+    .min(5, "Address is too short")
+    .refine((value) => value.trim().length > 0, {
+      message: "Address cannot be empty or contain only spaces",
+    })
+    .optional(),
+  delivery_date: z.date().optional(),
   comment: z
     .string()
     .min(5, "Comment is too short ")
     .refine((value) => value.trim().length > 0, {
       message: "Comment cannot be empty or contain only spaces",
-    }),
+    })
+    .optional(),
   state: z
     .enum(["Active", "Archived"])
     .refine((value) => ["Active", "Archived"].includes(value), {
