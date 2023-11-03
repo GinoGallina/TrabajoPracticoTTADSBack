@@ -1,4 +1,4 @@
-interface IPaymentType extends Document {
+interface IPaymentType {
   type: string;
   state: string;
   createdAt: Date;
