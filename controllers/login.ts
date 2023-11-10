@@ -21,20 +21,20 @@ export const loginController = {
       }
 
       const userResponse: IUserResponse = {
-        _id:user._id,
+        _id: user._id,
         email: user.email,
         username: user.username,
         type: user.type,
         address: user.address,
         state: user.state,
       };
-        const secret: string | undefined= process.env.SECRET_KEY;
-        if (!secret) {
-            return res.status(500).json({ error: "Error during login" });
-        }
-        
-        const tokenManager = new TokenManager(secret); // Usa tu secreto
-        const token = tokenManager.generateToken( userResponse , '3h'); // Genera el token
+      const secret: string | undefined = process.env.SECRET_KEY;
+      if (!secret) {
+        return res.status(500).json({ error: "Error during login" });
+      }
+
+      const tokenManager = new TokenManager(); // Usa tu secreto
+      const token = tokenManager.generateToken(userResponse, "3h"); // Genera el token
 
       res.status(200).json(token);
     } catch (error) {

@@ -1,54 +1,55 @@
 import mongoose, { Schema, Document, Model } from "mongoose";
-import mongooseUniqueValidator from "mongoose-unique-validator";
+import IOrder from "../../types/IOrder";
 
 interface IOrderDocument extends IOrder, Document {}
 
-const orderSchema: Schema<IOrderDocument> = new mongoose.Schema(
+const orderSchema = new Schema(
   {
     product: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
-      required: [true, "Order must have a product"]
-    },
-    unitprize: {
-      type: Number,
-      required: [true, "Order must have a unitprize"]
+      ref: "Product", // Assuming you have a Product model
+      required: true,
     },
     quantity: {
       type: Number,
-      required: [true, "Order must have a quantity"]
+      required: true,
     },
     amount: {
       type: Number,
-      required: [true, "Order must have an amount"]
+      required: true,
+    },
+    shipment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shipment", // Assuming you have a Shipment model
+      required: false, // Making it optional as indicated by the "?"
+    },
+    cart: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cart", // Assuming you have a Cart model
+      required: true,
     },
     state: {
       type: String,
       enum: ["Pending", "Completed", "Cancelled"],
       default: "Pending",
-      required: [true, "Order must have a state"]
     },
-    shipment: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Shipment",
-      required: false
-    },
-    cart: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Cart",
-      required: [true, "Order must have a cart"]
+    unitPrice: {
+      type: Number,
+      required: true,
     },
     completedAt: {
       type: Date,
-      required: false
-    }
+      required: false,
+    },
   },
   {
-    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" }
+    timestamps: true,
   }
 );
 
-orderSchema.plugin(mongooseUniqueValidator);
+orderSchema.set("toObject", { virtuals: true });
+orderSchema.set("toJSON", { virtuals: true });
+
 const Order: Model<IOrderDocument> = mongoose.model<IOrderDocument>(
   "Order",
   orderSchema

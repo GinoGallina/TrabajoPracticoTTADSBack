@@ -10,7 +10,6 @@ mongoose.connect(dbURL, {
   //useNewUrlParser: true,
   //useUnifiedTopology: true,
 });
-
 // Manejo de eventos de conexión
 const db: Connection = mongoose.connection;
 

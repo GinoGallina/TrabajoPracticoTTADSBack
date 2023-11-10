@@ -1,12 +1,15 @@
-interface IOrder {
-  product: String;
-  unitprize: Number;
-  quantity: Number;
-  amount: Number;
-  state: "Pending" | "Completed" | "Cancelled";
-  shipment: String | null;
-  cart: String | null;
-  completedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
+import { Document } from "mongoose";
+import ICart from "./ICart";
+
+interface IOrder extends Document {
+  product: IProduct;
+  quantity: number;
+  amount: number;
+  shipment?: IShipment;
+  cart: ICart;
+  state: "Pending" | "Completed" | "Cancelled"; // Add more states as needed
+  unitPrice: number;
+  completedAt?: Date;
 }
+
+export default IOrder;

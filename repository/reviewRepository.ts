@@ -18,7 +18,7 @@ export class ReviewRepository implements Repository<IReview> {
 
   public async update(
     id: string,
-    review: IReview,
+    review: IReview
   ): Promise<IReview | undefined> {
     return (
       (await Review.findOneAndUpdate(
@@ -27,7 +27,7 @@ export class ReviewRepository implements Repository<IReview> {
           state: "Active",
         },
         review,
-        { new: true },
+        { new: true }
       )) || undefined
     );
   }
@@ -37,7 +37,7 @@ export class ReviewRepository implements Repository<IReview> {
       (await Review.findByIdAndUpdate(
         { _id: item.id },
         { state: "Archived" },
-        { new: true },
+        { new: true }
       )) || undefined
     );
   }

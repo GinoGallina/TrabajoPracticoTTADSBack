@@ -3,7 +3,6 @@ import { Document } from "mongoose";
 
 interface ICart extends Document {
   state: "Pending" | "Completed";
-  orders: IOrder[];
   user: IUser;
   paymentType: IPaymentType;
   createdAt: Date;
