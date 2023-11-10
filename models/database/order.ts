@@ -5,6 +5,11 @@ interface IOrderDocument extends IOrder, Document {}
 
 const orderSchema: Schema<IOrderDocument> = new mongoose.Schema(
   {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: [true, "Order must have a product"]
+    },
     unitprize: {
       type: Number,
       required: [true, "Order must have a unitprize"]

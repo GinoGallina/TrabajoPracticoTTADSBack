@@ -1,4 +1,5 @@
 interface IOrder {
+  product: String;
   unitprize: Number;
   quantity: Number;
   amount: Number;
