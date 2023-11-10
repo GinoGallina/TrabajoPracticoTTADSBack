@@ -7,7 +7,7 @@ interface IOrder extends Document {
   amount: number;
   shipment?: IShipment;
   cart: ICart;
-  state: "Pending" | "Completed" | "Cancelled"; // Add more states as needed
+  state: "Pending" | "Completed" | "Cancelled";
   unitPrice: number;
   completedAt?: Date;
 }
