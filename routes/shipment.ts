@@ -1,14 +1,14 @@
-import { Router } from 'express'
+import { Router } from "express";
 
-import ShipmentController from '../controllers/shipment.js'
+import ShipmentController from "../controllers/shipment.js";
 
-export const shipmentRouter = Router()
+export const shipmentRouter = Router();
 
-shipmentRouter.get('/', ShipmentController.getAllShipments)
-shipmentRouter.post('/', ShipmentController.createShipment)
+shipmentRouter.get("/", ShipmentController.getAllShipments);
+shipmentRouter.post("/", ShipmentController.createShipment);
 
-shipmentRouter.get('/:id', ShipmentController.getShipmentById)
-shipmentRouter.delete('/:id', ShipmentController.deleteShipmentById)
-shipmentRouter.patch('/:id', ShipmentController.updateShipmentById)
+shipmentRouter.get("/:id", ShipmentController.getShipmentById);
+shipmentRouter.delete("/:id", ShipmentController.deleteShipmentById);
+shipmentRouter.patch("/:id", ShipmentController.updateShipmentById);
 
-export default shipmentRouter
+export default shipmentRouter;

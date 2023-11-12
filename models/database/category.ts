@@ -1,24 +1,37 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
-import mongooseUniqueValidator from 'mongoose-unique-validator';
+import mongoose, { Schema, Document, Model } from "mongoose";
+import mongooseUniqueValidator from "mongoose-unique-validator";
 
+interface ICategoryDocument extends ICategory, Document {}
 
-interface ICategoryDocument extends ICategory, Document { }
-
-const categorySchema: Schema<ICategoryDocument> = new mongoose.Schema({
-  category: {
-    type: String,
-    required: [true, 'Category must have a name'],
-    unique: true,
-    uniqueCaseInsensitive: [true, 'Cant have two categories with the same name']
+const categorySchema: Schema<ICategoryDocument> = new mongoose.Schema(
+  {
+    category: {
+      type: String,
+      required: [true, "Category must have a name"],
+      unique: true,
+      uniqueCaseInsensitive: [
+        true,
+        "Cant have two categories with the same name",
+      ],
+    },
+    state: { type: String, enum: ["Active", "Archived"], default: "Active" },
   },
-  state: { type: String, enum: ['Active', 'Archived'], default: 'Active' }
-},
-{
-  timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' }
-}
-)
+  {
+    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
+  }
+);
 
-categorySchema.plugin(mongooseUniqueValidator)
-const Category: Model<ICategoryDocument> = mongoose.model<ICategoryDocument>('Category', categorySchema)
+categorySchema.plugin(mongooseUniqueValidator);
+categorySchema.virtual("discounts", {
+  ref: "Discount",
+  localField: "_id",
+  foreignField: "category",
+});
+categorySchema.set("toObject", { virtuals: true });
+categorySchema.set("toJSON", { virtuals: true });
+const Category: Model<ICategoryDocument> = mongoose.model<ICategoryDocument>(
+  "Category",
+  categorySchema
+);
 
-export  { Category, ICategoryDocument }
+export { Category, ICategoryDocument };

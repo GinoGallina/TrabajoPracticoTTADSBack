@@ -1,0 +1,14 @@
+### POST
+## 6546f6f204a370e6bcf92275
+POST http://localhost:1234/user
+Content-Type: application/json
+
+{
+    "username": "german",
+    "email": "germantest@gmail.com",
+    "type": "User",
+    "password": "1234567",
+    "address": "MV 34"
+}
+
+

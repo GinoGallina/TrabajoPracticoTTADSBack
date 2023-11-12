@@ -1,131 +1,119 @@
-import User from '../models/database/user.js';
-import { Request, Response } from 'express';
-import * as bcrypt from 'bcryptjs';
-import { validatePartialUserUpdate, validateUser } from '../schemas/user.js'
-const userController = {
+import { Request, Response } from "express";
+import { default as bcrypt } from "bcryptjs";
+import { validatePartialUserUpdate, validateUser } from "../schemas/user.js";
+import { UserRepository } from "../repository/userRepository.js";
+import { UserFilter } from "../types/filters/UserFilter.js";
 
+const userRepository = new UserRepository();
+
+const userController = {
   getAllUsers: async (req: Request, res: Response) => {
     try {
-      const users = await User.find({}, '-_id email address userId state type');
+      const filter: UserFilter = req.query as UserFilter;
+      const users = await userRepository.findAll(filter);
       res.status(200).json(users);
     } catch (error) {
-      res.status(500).json({ error: 'Error getting Users' });
+      res.status(500).json({ error: "Error getting Users" });
     }
   },
 
-getUserById: async (req: Request, res: Response) => {
+  getUserById: async (req: Request, res: Response) => {
     try {
-      const user = await User.findOne({ userId: req.params.id }, '-_id email address userId state type');
+      const id = req.params.id;
+      const user = await userRepository.findOne({ id });
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ error: "User not found" });
       }
       res.status(200).json(user);
     } catch (error) {
-      res.status(500).json({ error: 'Error getting User' });
-    }
-  },
-  
-  loginUser: async (req: Request, res: Response) => {
-    try {
-      const { email, password } = req.body;
-
-      const user = await User.findOne({ email });
-
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-
-      if (!isPasswordValid) {
-        return res.status(401).json({ error: 'Incorrect password' });
-      }
-
-      res.status(200).json({ message: 'Login successful' });
-    } catch (error) {
-      res.status(500).json({ error: 'Error during login' });
+      res.status(500).json({ error: "Error getting User" });
     }
   },
 
-  createUser: async (req: Request , res: Response) => {
+  createUser: async (req: Request, res: Response) => {
     try {
-      const result = validateUser(req.body)
+      const result = validateUser(req.body);
       if (!result.success) {
         const errorMessage = result.error?.message;
         if (errorMessage) {
-            return res.status(400).json({ error: JSON.parse(errorMessage) });
+          return res.status(400).json({ error: JSON.parse(errorMessage) });
         } else {
-            return res.status(400).json({ error: "Unexpected Error" });
+          return res.status(400).json({ error: "Unexpected Error" });
         }
       }
 
-      const saltRounds = 10
-      const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
-      result.data.password = hashedPassword
-
-      const newUser = new User(result.data)
-
-      const { userId, email, username, type, state } = await newUser.save()
-      const responseData = {
-        userId,
-        email,
-        username,
-        type,
-        state
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(
+        result.data.password,
+        saltRounds,
+      );
+      result.data.password = hashedPassword;
+      const user: IUser | undefined = await userRepository.add(result.data);
+      if (!user) {
+        return res.status(500).json({ error: "Error creating user." });
       }
-      res.status(201).json({ message: 'User created', data: responseData })
+
+      const responseData: any = {
+        email: user.email,
+        username: user.username,
+        type: user.type,
+        state: user.state,
+        address: user.address,
+      };
+      res.status(201).json({ message: "User created", data: responseData });
     } catch (error) {
-      res.status(500).json({ error: JSON.stringify(error) })
+      console.error(error);
+      res.status(500).json({ error: "An unexpected error occurred." });
     }
   },
 
   updateUserById: async (req: Request, res: Response) => {
     try {
-      const result = validatePartialUserUpdate(req.body)
+      const result = validatePartialUserUpdate(req.body);
 
       if (!result.success) {
         const errorMessage = result.error?.message;
         if (errorMessage) {
-            return res.status(400).json({ error: JSON.parse(errorMessage) });
+          return res.status(400).json({ error: JSON.parse(errorMessage) });
         } else {
-            return res.status(400).json({ error: "Unexpected Error" });
-        }      
+          return res.status(400).json({ error: "Unexpected Error" });
+        }
       }
       if (result.data.password) {
-        const saltRounds = 10
-        const hashedPassword = await bcrypt.hash(result.data.password, saltRounds)
-        result.data.password = hashedPassword
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(
+          result.data.password,
+          saltRounds,
+        );
+        result.data.password = hashedPassword;
       }
-      const updatedUser = await User.findOneAndUpdate(
-        { userId: req.params.id },
+
+      const updatedUser = await userRepository.update(
+        req.params.id,
         result.data,
-        { new: true }
-      )
+      );
       if (!updatedUser) {
-        return res.status(404).json({ error: 'User not found' })
+        return res.status(404).json({ error: "User not found" });
       }
-      res.status(200).json(updatedUser)
+      res.status(200).json(updatedUser);
     } catch (error) {
-      res.status(500).json({ error: 'Error updating user' })
+      res.status(500).json({ error: "Error updating user" });
     }
   },
 
   deleteUserById: async (req: Request, res: Response) => {
     try {
-      const updatedUser = await User.findOneAndUpdate(
-        { userId: req.params.id },
-        { state: 'Disable' },
-        { new: true }
-      )
+      const id = req.params.id;
+      const updatedUser = await userRepository.delete({ id });
       if (!updatedUser) {
-        return res.status(404).json({ error: 'User not found' })
+        return res.status(404).json({ error: "User not found" });
       }
 
-      res.status(200).json({ message: 'User deleted' })
+      res.status(200).json({ message: "User deleted" });
     } catch (error) {
-      res.status(500).json({ error: 'Error deleting user' })
+      res.status(500).json({ error: "Error deleting user" });
     }
-  }
-}
+  },
+};
 
-export default userController
+export default userController;

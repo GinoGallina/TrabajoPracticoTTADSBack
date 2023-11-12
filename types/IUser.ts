@@ -1,5 +1,4 @@
-interface IUser extends Document {
-  userId: string;
+interface IUser {
   username: string;
   email: string;
   type: string;
@@ -14,4 +13,5 @@ interface ISeller extends IUser {
   cbu: string;
   shop_name: string;
   cuit: string;
+  products: IProduct[];
 }

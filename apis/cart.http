@@ -1,0 +1,13 @@
+### POST
+## 6546f6f204a370e6bcf92275
+GET http://localhost:1234/cart
+Authorization: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NTQ2ZjZmMjA0YTM3MGU2YmNmOTIyNzUiLCJlbWFpbCI6Imdlcm1hbnRlc3RAZ21haWwuY29tIiwidXNlcm5hbWUiOiJnZXJtYW4iLCJ0eXBlIjoiVXNlciIsImFkZHJlc3MiOiJNViAzNCIsInN0YXRlIjoiQWN0aXZlIiwiaWF0IjoxNjk5NTc5MDYzLCJleHAiOjE2OTk1ODk4NjN9.r9JFZ7o5N2ppQoz7TcTEmkkz_74WbxtWSBMshsTDboI
+
+Content-Type: application/json
+
+{
+    "status": "Pending",
+
+}
+
+
