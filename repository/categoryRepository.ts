@@ -4,11 +4,13 @@ import { Repository } from "../shared/repository.js";
 export class CategoryRepository implements Repository<ICategory> {
   public async findAll(): Promise<ICategory[] | undefined> {
     return (
-      (await Category.find().populate({
-        path: "discounts",
-        model: "Discount",
-        select: "_id value createdAt updatedAt -category",
-      })) || undefined
+      (await Category.find()
+        .populate({
+          path: "discounts",
+          model: "Discount",
+          select: "_id value state createdAt updatedAt -category",
+        })
+        .sort({ createAt: -1 })) || undefined
     );
   }
 
@@ -18,7 +20,7 @@ export class CategoryRepository implements Repository<ICategory> {
       (await Category.findOne({ _id }).populate({
         path: "discounts",
         model: "Discount",
-        select: "_id value createdAt updatedAt -category",
+        select: "_id value state createdAt updatedAt -category",
       })) || undefined
     );
   }
