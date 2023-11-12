@@ -33,7 +33,7 @@ export class CategoryRepository implements Repository<ICategory> {
     category: ICategory
   ): Promise<ICategory | undefined> {
     return (
-      (await Category.findOneAndUpdate(
+      (await Category.findByIdAndUpdate(
         {
           _id: id,
           state: "Active",

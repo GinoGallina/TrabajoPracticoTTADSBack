@@ -22,7 +22,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
     discount: IDiscount
   ): Promise<IDiscount | undefined> {
     return (
-      (await Discount.findOneAndUpdate(
+      (await Discount.findByIdAndUpdate(
         {
           _id: id,
           state: "Active",
