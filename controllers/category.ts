@@ -1,6 +1,9 @@
 import { Category, ICategoryDocument } from "../models/database/category.js";
 import { Request, Response } from "express";
-import { validateCategory } from "../schemas/category.js";
+import {
+  validateCategory,
+  validatePartialCategory,
+} from "../schemas/category.js";
 import { CategoryRepository } from "./../repository/categoryRepository.js";
 
 const categoryRepository = new CategoryRepository();

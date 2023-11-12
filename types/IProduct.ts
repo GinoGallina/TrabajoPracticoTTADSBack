@@ -3,7 +3,7 @@ interface IProduct {
   category: string;
   name: string;
   description: string;
-  price: string;
+  price: number;
   stock: number;
   img: string;
   state: "Active" | "Archived";
