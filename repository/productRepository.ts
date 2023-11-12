@@ -31,7 +31,6 @@ export class ProductRepository implements IProductRepository<IProduct> {
       (await Product.findOneAndUpdate(
         {
           _id: id,
-          state: "Active",
         },
         product,
         { new: true }
