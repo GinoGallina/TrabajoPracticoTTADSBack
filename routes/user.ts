@@ -8,5 +8,6 @@ userRouter.post("/", userController.createUser);
 userRouter.get("/:id", userController.getUserById);
 userRouter.delete("/:id", userController.deleteUserById);
 userRouter.put("/:id", userController.updateUserById);
+userRouter.put("/activate/:id", userController.activateUserById);
 
 export default userRouter;

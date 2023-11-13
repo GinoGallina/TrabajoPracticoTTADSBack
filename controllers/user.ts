@@ -114,6 +114,20 @@ const userController = {
       res.status(500).json({ error: "Error deleting user" });
     }
   },
+
+  activateUserById: async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id;
+      const updatedUser = await userRepository.activate({ id });
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.status(200).json({ message: "User activated" });
+    } catch (error) {
+      res.status(500).json({ error: "Error activating user" });
+    }
+  },
 };
 
 export default userController;

@@ -7,7 +7,7 @@ export class UserRepository implements IUserRepository<IUser> {
   public async findAll(filters: UserFilter): Promise<IUser[] | undefined> {
     return await User.find(
       filters,
-      "email address state type cbu shop_name cuit",
+      "username email address state type cbu shop_name cuit",
     );
   }
 
@@ -38,6 +38,16 @@ export class UserRepository implements IUserRepository<IUser> {
       (await User.findOneAndUpdate(
         { _id: item.id },
         { state: "Disable" },
+        { new: true },
+      )) || undefined
+    );
+  }
+
+  public async activate(item: { id: string }): Promise<IUser | undefined> {
+    return (
+      (await User.findOneAndUpdate(
+        { _id: item.id },
+        { state: "Active" },
         { new: true },
       )) || undefined
     );
