@@ -7,7 +7,7 @@
 ## CAMBIAR PRECIO POR STRING. ANGEL
 
 ## Review y moderación -> Integrar cliente de ChatGPT con la review. TOMI
-
+## LOGIN CON GOOGLE
 ## Integrar en el front el listado de lugares que usen ubicación. 
 
 ## TEST de API
