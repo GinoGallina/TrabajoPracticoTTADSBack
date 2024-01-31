@@ -21,9 +21,14 @@ export const userSchema = new Schema({
     unique: true,
     uniqueCaseInsensitive: true,
   },
-  type: { type: String, enum: ["Admin", "User", "Seller"], required: true },
-  password: { type: String, required: true, trim: true },
-  address: { type: String, required: true },
+  type: {
+    type: String,
+    enum: ["Admin", "User", "Seller"],
+    required: true,
+    default: "User",
+  },
+  password: { type: String, required: false, trim: true },
+  address: { type: String, required: false },
   state: { type: String, default: "Active" },
   cbu: {
     type: String,
@@ -49,7 +54,7 @@ userSchema.plugin(mongooseUniqueValidator);
 
 const User: Model<IUserDocument> = mongoose.model<IUserDocument>(
   "User",
-  userSchema,
+  userSchema
 );
 
 export { User, IUserDocument };

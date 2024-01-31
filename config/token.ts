@@ -1,5 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config();
 import jwt, { Secret } from "jsonwebtoken";
 
+import { IAuthOUser } from "../types/Auth0Token";
 class TokenManager {
   private secretKey: Secret;
 
@@ -22,6 +25,11 @@ class TokenManager {
     } catch (error) {
       return null;
     }
+  }
+
+  decodeAuth0Token(token: string): IAuthOUser | null {
+    const user: IAuthOUser | null = jwt.decode(token) as IAuthOUser;
+    return user;
   }
 }
 

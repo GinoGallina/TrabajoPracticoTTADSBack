@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import TokenManager from "../config/token.js";
+import { auth } from "express-oauth2-jwt-bearer";
 
 // Extiende la interfaz Request para agregar la propiedad 'user'
 declare global {
@@ -20,11 +21,9 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
     }
     const secret: string | undefined = process.env.SECRET_KEY;
     if (!secret) {
-      return res
-        .status(500)
-        .json({
-          error: "Error interno del servidor, no está el secreto del jwt",
-        });
+      return res.status(500).json({
+        error: "Error interno del servidor, no está el secreto del jwt",
+      });
     }
 
     const tokenManager = new TokenManager();
