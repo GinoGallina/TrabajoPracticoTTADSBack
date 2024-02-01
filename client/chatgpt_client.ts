@@ -3,8 +3,8 @@ import OpenAI from "openai";
 
 async function isAppropriate (productReview: string){
         const openai = new OpenAI({
-            apiKey: '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',
-            organization: 'org-VjFEgYWmzKaccLE5ElMLUPXN'
+            apiKey: process.env.api_key,
+            organization: process.env.organization_id
         })
         const response = await openai.chat.completions.create({
             model: 'gpt-3.5-turbo',
