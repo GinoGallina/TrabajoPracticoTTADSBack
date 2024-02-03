@@ -11,3 +11,7 @@ node_modules
 ./settings.json
 settings.json
 .env
+
+#public key
+public-key.key
+./public-key.key
