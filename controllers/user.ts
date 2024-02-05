@@ -45,7 +45,7 @@ const userController = {
       const saltRounds = 10;
       const hashedPassword = await bcrypt.hash(
         result.data.password,
-        saltRounds,
+        saltRounds
       );
       result.data.password = hashedPassword;
       const user: IUser | undefined = await userRepository.add(result.data);
@@ -83,14 +83,14 @@ const userController = {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(
           result.data.password,
-          saltRounds,
+          saltRounds
         );
         result.data.password = hashedPassword;
       }
 
       const updatedUser = await userRepository.update(
         req.params.id,
-        result.data,
+        result.data
       );
       if (!updatedUser) {
         return res.status(404).json({ error: "User not found" });

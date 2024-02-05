@@ -2,6 +2,7 @@ import { Review, IReviewDocument } from "../models/database/review.js";
 import { Request, Response } from "express";
 import { validateReview } from "../schemas/review.js";
 import { ReviewRepository } from "./../repository/reviewRepository.js";
+import { isAppropriate } from "../client/chatgpt_client.js";
 
 const reviewRepository = new ReviewRepository();
 
@@ -38,9 +39,15 @@ const ReviewController = {
           .status(400)
           .json({ error: JSON.parse(result.error.message) });
       }
-
-      const savedReview = await reviewRepository.add(req.body);
-      res.status(201).json({ message: "Review created", data: savedReview });
+      const isAppropriateComment: string = await isAppropriate(req.body.comment);
+      console.log(isAppropriateComment); 
+      console.log(req.body.comment);
+      if (isAppropriateComment === 'true') {
+        const savedReview = await reviewRepository.add(req.body);
+        res.status(201).json({ message: "Review created", data: savedReview });
+      }else{
+        return res.status(400).json({ error: "Review contains inappropriate language" });
+      }
     } catch (error) {
       res.status(500).json(error);
     }

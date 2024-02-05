@@ -4,5 +4,5 @@ interface IReview {
   state: "Active" | "Archived";
   createdAt: Date;
   updatedAt: Date;
-  //FALTA ORDEN
+  // TODO FALTA ORDEN
 }
