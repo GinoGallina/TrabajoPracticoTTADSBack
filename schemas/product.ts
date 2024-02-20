@@ -6,7 +6,7 @@ const productSchema = z.object({
   category: z.string(),
   name: z.string(),
   description: z.string(),
-  price: z.number(),
+  price: z.number().positive(),
   stock: z.number(),
   img: z.string(),
   state: StateSchema,

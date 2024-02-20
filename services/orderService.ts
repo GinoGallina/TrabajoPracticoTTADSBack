@@ -14,7 +14,7 @@ export const OrderService = {
     //Stock del Producto
     //Estado del producto
     //Crear Shipment
-    //Setear Unit-prize del producto
+    //Setear Unit-price del producto
     //Calcular amount
     //
 
