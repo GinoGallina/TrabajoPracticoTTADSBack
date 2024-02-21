@@ -8,17 +8,16 @@ const orderSchema = z.object({
       message: "Product must be valid"
     }),
   state: z
-    .enum(["Pending", "Completed", "Cancelled"])
-    .refine((value) => ["Pending", "Completed", "Cancelled"].includes(value),{
+    .enum(["Completed", "Cancelled"])
+    .refine((value) => ["Completed", "Cancelled"].includes(value),{
       message: "Order stare must be a valid type"
     })
-    .default("Pending"),
+    .default("Completed"),
   //Datos de Shipment para cargarlo junto con la Order
   shipment_type: z
-    .string()
-    .min(5, "Shipment Type must be valid")
-    .refine((value) => value.trim().length > 0, {
-      message: "Shipment Type cannot be empty",
+    .enum(["home_delivery", "branch_office_pickup", "other"])
+    .refine((value) => ["home_delivery", "branch_office_pickup", "other"].includes(value),{
+      message: "Shipment_type must be a valid type"
     }),
   delivery_address: z
     .string()
@@ -27,7 +26,7 @@ const orderSchema = z.object({
       message: "Address cannot be empty or contain only spaces",
     })
     .optional(),
-  delivery_date: z.date().optional(),
+  //delivery_date: z.date().optional(),
   comment: z
     .string()
     .min(5, "Comment is too short")
@@ -35,6 +34,7 @@ const orderSchema = z.object({
       message: "Comment cannot be empty or contain only spaces",
     })
     .optional()
+  
   
 });
 

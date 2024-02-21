@@ -1,15 +1,19 @@
-import { Document } from "mongoose";
 import ICart from "./ICart";
 
-interface IOrder extends Document {
-  product: IProduct;
+interface IOrder{
+  product: string;
   quantity: number;
   amount: number;
-  shipment?: IShipment;
-  cart: ICart;
-  state: "Pending" | "Completed" | "Cancelled";
+  cart?: string;
+  state:"Completed" | "Cancelled";
   unitPrice: number;
   completedAt?: Date;
+  //Shipment data
+  shipment_type: "home_delivery" | "branch_office_pickup" | "other";
+  delivery_address?: String;
+  comment?: String;
+  situation: "In Transit" | "Received";
+
 }
 
 export default IOrder;

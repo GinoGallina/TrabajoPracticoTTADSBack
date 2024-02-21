@@ -2,7 +2,7 @@ import { Discount, IDiscountDocument } from "../models/database/discount.js";
 import { Repository } from "../shared/repository.js";
 import IDiscount from "../types/IDiscount.js";
 
-export class DiscountReposirory implements Repository<IDiscount> {
+export class DiscountRepository implements Repository<IDiscount> {
   public async findAll(): Promise<IDiscount[] | undefined> {
     return await Discount.find({ state: "Active" }).populate("category");
   }
@@ -11,6 +11,12 @@ export class DiscountReposirory implements Repository<IDiscount> {
     const _id = new Object(item.id);
     return (await Discount.findOne({ _id }).populate("category")) || undefined;
   }
+
+  public async findCurrent(item: { id: string }): Promise<IDiscount | undefined> {
+    const _id = new Object(item.id);
+    return ((await Discount.find({ category: _id, state: "Active"}).sort({createdAt: -1}).limit(1)).at(0)) || undefined;
+  }
+
 
   public async add(discount: IDiscount): Promise<IDiscount | undefined> {
     const newDiscount: IDiscountDocument = new Discount(discount);
@@ -32,6 +38,7 @@ export class DiscountReposirory implements Repository<IDiscount> {
       )) || undefined
     );
   }
+
   public async delete(item: { id: string }): Promise<IDiscount | undefined> {
     return (
       (await Discount.findByIdAndUpdate(

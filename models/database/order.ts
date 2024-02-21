@@ -18,11 +18,6 @@ const orderSchema = new Schema(
       type: Number,
       required: true,
     },
-    shipment: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Shipment", // Assuming you have a Shipment model
-      required: false, // Making it optional as indicated by the "?"
-    },
     cart: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Cart", // Assuming you have a Cart model
@@ -30,8 +25,8 @@ const orderSchema = new Schema(
     },
     state: {
       type: String,
-      enum: ["Pending", "Completed", "Cancelled"],
-      default: "Pending",
+      enum: ["Completed", "Cancelled"],
+      default: "Completed",
     },
     unitPrice: {
       type: Number,
@@ -40,6 +35,26 @@ const orderSchema = new Schema(
     completedAt: {
       type: Date,
       required: false,
+    },
+    //Shipment data
+    shipment_type: {
+      type: String,
+      enum: ["home_delivery", "branch_office_pickup", "other"],
+      required: [true, "Shipment Type cannot be empty"],
+    },
+    delivery_address: {
+      type: String,
+      required: false
+    },
+    comment: {
+      type: String,
+      required: false,
+    },
+    situation: {
+      type: String,
+      enum: ["In Transit", "Received"],
+      default: "In Transit",
+      required: true
     },
   },
   {

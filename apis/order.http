@@ -1,0 +1,14 @@
+### POST
+## 6546f6f204a370e6bcf92275
+POST http://localhost:1234/order
+Content-Type: application/json
+
+{
+    "quantity": 2,
+    "product": "65388dc45ab8e6fb26fb711e",
+    "shipment_type": "home_delivery",
+    "delivery_address": "Rivadavia 1234, CP 2189",
+    "cart": "654d890b9c3ebd4e1f221647"
+}
+
+
