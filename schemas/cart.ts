@@ -1,15 +1,14 @@
 import { z } from "zod";
+import { orderSchema } from "./order";
 
-const categorySchema = z.object({
-  member_id: z.string().refine((value) => value.trim().length > 0, {
-    message: "member_id is required",
-  }),
+const cartSchema = z.object({
+  orders: z.array(orderSchema), // This validates an array of orders
 });
 
 export function validateCart(input: unknown) {
-  return categorySchema.safeParse(input);
+  return cartSchema.safeParse(input);
 }
 
 export function validatePartialCart(input: unknown) {
-  return categorySchema.partial().safeParse(input);
+  return cartSchema.partial().safeParse(input);
 }

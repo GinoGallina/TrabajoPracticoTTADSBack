@@ -12,81 +12,87 @@ type ServiceResult<T> = {
   success: boolean;
   data?: T;
   message?: string;
-}
+};
 
 export const OrderService = {
-  create: async (params: IOrder): Promise<ServiceResult<IOrder | void>> => {
+  create: async (
+    params: IOrder,
+    session = {}
+  ): Promise<ServiceResult<IOrder | void>> => {
     try {
-
       //Validate product
-      const product = await productRepository.findOne({ id: params.product }) as IProduct;
-      
+      const product = (await productRepository.findOne({
+        id: params.product,
+      })) as IProduct;
+
       const result = await validateProduct(product, params.quantity);
-      if(result instanceof Error){
-        return{
+      if (result instanceof Error) {
+        return {
           success: false,
           message: result.message,
-        }
+        };
       }
 
       //Validate shipment
-      if( params.shipment_type != "other" && !params.delivery_address ){
-        return{
+      if (params.shipment_type != "other" && !params.delivery_address) {
+        return {
           success: false,
           message: "Missing shipment address",
-        }
+        };
       }
 
       //Compute unitPrice with discount
       var unitPrice = product.price;
-      const discount:IDiscount | undefined = await discountRepository.findCurrent({id: product.category});
-      if(discount){
-        unitPrice = product.price * (1 - discount?.value/100);
+      const discount: IDiscount | undefined =
+        await discountRepository.findCurrent({ id: product.category });
+      if (discount) {
+        unitPrice = product.price * (1 - discount?.value / 100);
       }
 
       //Build order
-      const order:IOrder = {
+      const order: IOrder = {
         ...params,
         unitPrice: unitPrice,
-        amount: (unitPrice*params.quantity), 
+        amount: unitPrice * params.quantity,
         completedAt: new Date(Date.now()),
-      }
+      };
 
       //Discount stock
       product.stock -= params.quantity;
       productRepository.update(params.product, product);
 
       //Save order
-      const addedOrder = await orderRepository.add(order);
+      const addedOrder = await orderRepository.add(order, { session });
 
-      return{
+      return {
         success: true,
-        data: addedOrder
-      }
-    
-    }catch (error){
+        data: addedOrder,
+      };
+    } catch (error) {
       return {
         success: false,
         message: "Failed to create order",
-      }
+      };
     }
-  }
-}
+  },
+};
 
-const validateProduct = async (product: IProduct, quantity: number): Promise<boolean | Error> => {
+const validateProduct = async (
+  product: IProduct,
+  quantity: number
+): Promise<boolean | Error> => {
   try {
-    if(!product){
+    if (!product) {
       return new Error("Product not found");
     }
-    if(product.state !== "Active"){
+    if (product.state !== "Active") {
       return new Error("Product invalid status");
     }
-    if(product.stock < quantity){
+    if (product.stock < quantity) {
       return new Error("Insuficient stock");
     }
 
     return true;
-
   } catch (error) {
     console.log(error);
 

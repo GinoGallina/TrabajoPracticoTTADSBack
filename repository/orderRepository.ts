@@ -4,9 +4,9 @@ import { ClientSession, now } from "mongoose";
 import IOrder from "../types/IOrder.js";
 
 export class OrderRepository implements IOrderRepository<IOrder> {
-  public async add(order: IOrder): Promise<IOrder | undefined> {
+  public async add(order: IOrder, options = {}): Promise<IOrder | undefined> {
     const newORder: IOrderDocument = new Order(order);
-    return await newORder.save();
+    return await newORder.save(options);
   }
 
   public async update(id: string, order: IOrder): Promise<IOrder | undefined> {

@@ -1,83 +1,53 @@
-// import mongoose from "mongoose";
-// import { CartRepository } from "../repository/cartRepository.js";
-// import ICart from "../types/ICart.js";
+import mongoose from "mongoose";
+import { CartRepository } from "../repository/cartRepository.js";
+import ICart from "../types/ICart.js";
+import IOrder from "../types/IOrder.js";
+import { OrderService } from "./orderService.js";
 
-// const cartRepository = new CartRepository();
-// //const orderRepository = new OrderRepository();
-// type ServiceResult<T> = {
-//   success: boolean;
-//   data?: T;
-//   message?: string;
-// };
+const cartRepository = new CartRepository();
 
-// export const CartServices = {
-//   create: async (
-//     order: IOrder,
-//     user_id: string
-//   ): Promise<ServiceResult<IOrder | void>> => {
-//     const result = await findOrCreateCart(user_id);
-//     if (result instanceof Error) {
-//       return {
-//         success: false,
-//         message: result.message,
-//       };
-//     }
-//     order.cart = result._id;
-//     return {
-//       success: true,
-//       data: order,
-//     };
-//   },
+//const orderRepository = new OrderRepository();
+type ServiceResult<T> = {
+  success: boolean;
+  data?: T;
+  message?: string;
+};
 
-//   complete: async (user_id: string): Promise<ServiceResult<IOrder | Error>> => {
-//     const session = await mongoose.startSession();
-//     session.startTransaction();
+export const CartServices = {
+  create: async (
+    orders: IOrder[],
+    user_id: string | string[]
+  ): Promise<ServiceResult<IOrder | void>> => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const cart = (await cartRepository.create({ session })) as ICart;
 
-//     try {
-//       const cart = await cartRepository.findCartByMember({
-//         user: user_id,
-//         state: "Pending",
-//       });
-//       if (!cart) {
-//         return {
-//           success: false,
-//           message: "Cart not found",
-//         };
-//       }
+      for (const order of orders) {
+        order.cart = cart.id;
+        const result = await OrderService.create(order, { session });
+        if (!result.success) {
+          await session.abortTransaction();
+          return {
+            success: false,
+            message: result.message,
+          };
+        }
+      }
 
-//       await cartRepository.findByIdAndUpdate(
-//         cart.id,
-//         { status: "completed" },
-//         { session }
-//       );
-
-//       //await orderRepository.updateOrders(cart.id,completed,session);
-
-//       await session.endSession();
-//       return {
-//         success: true,
-//         message: "Cart is completed",
-//       };
-//     } catch (error) {
-//       await session.abortTransaction();
-//       session.endSession();
-//       throw new Error("An error occurred");
-//     }
-//   },
-// };
-
-// const findOrCreateCart = async (id: string): Promise<ICart | Error> => {
-//   try {
-//     const cart = await cartRepository.findCartByMember({
-//       user,
-//       state: "Pending",
-//     });
-//     if (!cart) {
-//       const cart = (await cartRepository.create()) as ICart;
-//       return cart;
-//     }
-//     return cart;
-//   } catch (error) {
-//     throw new Error("Failed Creating cart");
-//   }
-// };
+      await session.commitTransaction();
+      return {
+        success: true,
+        message: "orders_created",
+      };
+    } catch (error) {
+      await session.abortTransaction();
+      return {
+        success: false,
+        message: "failed_creating_orders",
+      };
+    } finally {
+      session.endSession();
+    }
+  },
+};

@@ -35,9 +35,9 @@ export class CartRepository implements ICartRepository<ICart[] | undefined> {
     return;
   }
 
-  public async create(): Promise<any | undefined> {
+  public async create(options = {}): Promise<any | undefined> {
     const newCart: ICartDocument = new Cart();
-    return await newCart.save();
+    return await newCart.save(options);
   }
   public async completeBuy(): Promise<any | undefined> {
     return;

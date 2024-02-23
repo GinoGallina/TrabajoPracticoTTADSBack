@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { validateCart } from "../schemas/cart.js";
 import TokenManager from "../config/token.js";
 import { CartFilter } from "../types/filters/CartFilter.js";
+import { CartServices } from "../services/cartServices.js";
 
 const cartRepository = new CartRepository();
 const tokenManager = new TokenManager();
@@ -32,13 +33,22 @@ const cartController = {
     }
   },
 
-  completeBuy: async (req: Request, res: Response) => {
+  create: async (req: Request, res: Response) => {
     try {
-      const cart = await cartRepository.completeBuy();
-      res.status(201).json({ message: "buy completed", data: cart });
+      const orders = req.body;
+      const memberId = req.headers["member_id"];
+      if (!memberId) {
+        return res.status(401).json({ error: "Invalid User" });
+      }
+      const result = await CartServices.create(orders, memberId);
+      if (!result.success) {
+        return res.status(500).json(result.message);
+      }
+      res.status(201).json({ message: "cart_created" });
     } catch (error) {
-      res.status(500).json(error);
+      return res.status(500).json(error);
     }
   },
 };
+
 export default cartController;

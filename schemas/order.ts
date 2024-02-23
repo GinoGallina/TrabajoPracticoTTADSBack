@@ -1,24 +1,26 @@
 import { z } from "zod";
 
-const orderSchema = z.object({
+export const orderSchema = z.object({
   quantity: z.number().min(1, "Quantity cannot be zero"),
-  product: z
-    .string()
-    .refine((value) => value.trim().length > 0, {
-      message: "Product must be valid"
-    }),
+  product: z.string().refine((value) => value.trim().length > 0, {
+    message: "Product must be valid",
+  }),
   state: z
     .enum(["Completed", "Cancelled"])
-    .refine((value) => ["Completed", "Cancelled"].includes(value),{
-      message: "Order stare must be a valid type"
+    .refine((value) => ["Completed", "Cancelled"].includes(value), {
+      message: "Order stare must be a valid type",
     })
     .default("Completed"),
   //Datos de Shipment para cargarlo junto con la Order
   shipment_type: z
     .enum(["home_delivery", "branch_office_pickup", "other"])
-    .refine((value) => ["home_delivery", "branch_office_pickup", "other"].includes(value),{
-      message: "Shipment_type must be a valid type"
-    }),
+    .refine(
+      (value) =>
+        ["home_delivery", "branch_office_pickup", "other"].includes(value),
+      {
+        message: "Shipment_type must be a valid type",
+      }
+    ),
   delivery_address: z
     .string()
     .min(5, "Address is too short")
@@ -33,9 +35,7 @@ const orderSchema = z.object({
     .refine((value) => value.trim().length > 0, {
       message: "Comment cannot be empty or contain only spaces",
     })
-    .optional()
-  
-  
+    .optional(),
 });
 
 export function validateOrder(input: unknown) {
