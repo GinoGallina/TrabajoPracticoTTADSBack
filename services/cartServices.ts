@@ -21,7 +21,10 @@ export const CartServices = {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const cart = (await cartRepository.create({ session })) as ICart;
+      const cart = (await cartRepository.create({
+        user: user_id,
+        session,
+      })) as ICart;
 
       for (const order of orders) {
         order.cart = cart.id;
