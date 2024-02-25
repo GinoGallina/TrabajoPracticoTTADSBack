@@ -8,7 +8,7 @@ export class UserRepository implements IUserRepository<IUser> {
   public async findAll(filters: UserFilter): Promise<IUser[] | undefined> {
     return await User.find(
       filters,
-      "email address state type cbu shop_name cuit"
+      "username email address state type cbu shop_name cuit"
     );
   }
 

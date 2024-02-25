@@ -4,6 +4,8 @@ import { validatePartialUserUpdate, validateUser } from "../schemas/user.js";
 import { UserRepository } from "../repository/userRepository.js";
 import { UserFilter } from "../types/filters/UserFilter.js";
 
+import { IResponse } from "../shared/IResponse.js";
+
 const userRepository = new UserRepository();
 
 const userController = {

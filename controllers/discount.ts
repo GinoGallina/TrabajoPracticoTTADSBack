@@ -1,8 +1,8 @@
-import { DiscountReposirory } from "../repository/discountRepository.js";
+import { DiscountRepository } from "../repository/discountRepository.js";
 import { validateDiscount } from "../schemas/discount.js";
 import { Request, Response } from "express";
 
-const discountReposirory = new DiscountReposirory();
+const discountReposirory = new DiscountRepository();
 
 const discountController = {
   getAllDiscounts: async (req: Request, res: Response) => {
