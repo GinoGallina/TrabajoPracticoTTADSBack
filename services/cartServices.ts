@@ -25,7 +25,13 @@ export const CartServices = {
         user: user_id,
         session,
       })) as ICart;
-
+      if (!cart) {
+        await session.abortTransaction();
+        return {
+          success: false,
+          message: "error creating cart",
+        };
+      }
       for (const order of orders) {
         order.cart = cart.id;
         const result = await OrderService.create(order, { session });
