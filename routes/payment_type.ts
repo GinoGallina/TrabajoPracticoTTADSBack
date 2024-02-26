@@ -5,9 +5,9 @@ import { adminMiddleware } from "../middlewares/adminMiddleware.js";
 
 export const paymentTypeRouter = Router();
 
-paymentTypeRouter.get("/",adminMiddleware, PaymentTypeController.getAllPaymentTypes);
+paymentTypeRouter.get("/", PaymentTypeController.getAllPaymentTypes);
 paymentTypeRouter.post("/",adminMiddleware, PaymentTypeController.createPaymentType);
-paymentTypeRouter.get("/:id",adminMiddleware, PaymentTypeController.getPaymentTypeById);
+paymentTypeRouter.get("/:id", PaymentTypeController.getPaymentTypeById);
 paymentTypeRouter.delete("/:id",adminMiddleware, PaymentTypeController.deletePaymentTypeById);
 paymentTypeRouter.patch("/:id",adminMiddleware, PaymentTypeController.updatePaymentTypeById);
 

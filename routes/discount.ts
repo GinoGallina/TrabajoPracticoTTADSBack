@@ -5,9 +5,9 @@ import { adminMiddleware } from "../middlewares/adminMiddleware.js";
 
 export const discountRouter = Router();
 
-discountRouter.get("/",adminMiddleware, DiscountController.getAllDiscounts);
+discountRouter.get("/", DiscountController.getAllDiscounts);
 discountRouter.post("/",adminMiddleware, DiscountController.createDiscount);
-discountRouter.get("/:id",adminMiddleware, DiscountController.getDiscountById);
+discountRouter.get("/:id", DiscountController.getDiscountById);
 discountRouter.delete("/:id",adminMiddleware, DiscountController.deleteDiscountById);
 discountRouter.patch("/:id",adminMiddleware, DiscountController.updateDiscountById);
 

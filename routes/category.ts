@@ -5,9 +5,9 @@ import { adminMiddleware } from "../middlewares/adminMiddleware.js";
 
 export const categoryRouter = Router();
 
-categoryRouter.get("/",adminMiddleware, CategoryController.getAllCategories);
+categoryRouter.get("/", CategoryController.getAllCategories);
 categoryRouter.post("/",adminMiddleware, CategoryController.createCategory);
-categoryRouter.get("/:id",adminMiddleware, CategoryController.getCategoryById);
+categoryRouter.get("/:id", CategoryController.getCategoryById);
 categoryRouter.delete("/:id",adminMiddleware, CategoryController.deleteCategoryById);
 categoryRouter.put("/:id",adminMiddleware, CategoryController.updateCategoryById);
 export default categoryRouter;
