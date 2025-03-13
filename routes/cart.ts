@@ -1,9 +1,11 @@
 import { Router } from "express";
 import cartController from "../controllers/cart.js";
+import { userMiddleware } from "../middlewares/userMiddleware.js";
+import { userAndSellerMiddleware } from "../middlewares/userAndSellerMiddleware.js";
 
 export const cartRouter = Router();
 
-cartRouter.get("/", cartController.getCart);
-cartRouter.post("/", cartController.create);
+cartRouter.get("/", userAndSellerMiddleware,cartController.getCart);
+cartRouter.post("/", userAndSellerMiddleware,cartController.create);
 
 export default cartRouter;

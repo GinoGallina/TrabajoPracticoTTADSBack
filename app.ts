@@ -17,7 +17,6 @@ import loginRouter from "./routes/login.js";
 import productRouter from "./routes/product.js";
 
 import "./config/env.js";
-import { authRouter } from "./routes/auth.js";
 import { cartRouter } from "./routes/cart.js";
 import orderRouter from "./routes/order.js";
 
@@ -46,7 +45,6 @@ app.use("/login", loginRouter);
 app.use("/discount", discountRouter);
 app.use("/review", reviewRouter);
 
-app.use("/auth", authRouter);
 
 const PORT = 1234;
 

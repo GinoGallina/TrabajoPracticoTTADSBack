@@ -9,6 +9,9 @@ const userRepository = new UserRepository();
 const tokenManager = new TokenManager();
 
 export const loginController = {
+
+  // AGREGAR ID PARA LOS SELLER CUANDO SE HACE LOGIN CON AUTH
+
   loginWithAuth0: async (req: Request, res: Response) => {
     const { id_token } = req.body;
     const auth0User = tokenManager.decodeAuth0Token(id_token);
@@ -32,6 +35,7 @@ export const loginController = {
       const userResponse: IUserResponse = {
         email: user?.email,
         username: user?.username,
+        // _id:user?._id,
         type: user?.type,
         address: user?.address,
         state: user?.state,
@@ -68,6 +72,7 @@ export const loginController = {
 
       const userResponse: IUserResponse = {
         email: user.email,
+        _id:user._id,
         username: user.username,
         type: user.type,
         address: user.address,
