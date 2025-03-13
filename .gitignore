@@ -12,6 +12,8 @@ node_modules
 settings.json
 .env
 
+package-lock.json
+
 #public key
 public-key.key
 ./public-key.key
