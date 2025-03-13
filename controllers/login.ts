@@ -36,7 +36,7 @@ export const loginController = {
         address: user?.address,
         state: user?.state,
       };
-      const token = tokenManager.generateToken(userResponse, "3h");
+      const token = tokenManager.generateToken(userResponse, 3);
       res.status(200).json(token);
     }
     const userResponse: IUserResponse = {
@@ -46,7 +46,7 @@ export const loginController = {
       address: user?.address,
       state: user?.state,
     };
-    const token = tokenManager.generateToken(userResponse, "3h");
+    const token = tokenManager.generateToken(userResponse, 3);
     res.status(200).json(token);
   },
 
@@ -74,7 +74,7 @@ export const loginController = {
         state: user.state,
       };
 
-      const token = tokenManager.generateToken(userResponse, "3h");
+      const token = tokenManager.generateToken(userResponse, 3);
 
       res.status(200).json(token);
     } catch (error) {

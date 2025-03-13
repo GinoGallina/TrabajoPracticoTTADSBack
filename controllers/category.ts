@@ -34,6 +34,7 @@ const categoryController = {
 
   createCategory: async (req: Request, res: Response) => {
     try {
+      console.log(req.body)
       const result = validateCategory(req.body);
       if (!result.success) {
         // 422 Unprocessable Entity

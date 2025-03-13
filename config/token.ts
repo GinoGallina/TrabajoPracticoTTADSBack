@@ -1,10 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
-import jwt, { Secret } from "jsonwebtoken";
+import jwt from 'jsonwebtoken';
 import fs from "fs";
 import { IAuthOUser } from "../types/Auth0Token";
 class TokenManager {
-  private secretKey: Secret;
+  private secretKey:  string | undefined | any;
   private publicKeyFilePath: string = "public-key.key";
   private authkeys: string;
   constructor() {
@@ -12,12 +12,14 @@ class TokenManager {
       throw new Error("Secret key must be defined.");
     }
     this.secretKey = process.env.SECRET_KEY;
+
     this.authkeys = fs.readFileSync(this.publicKeyFilePath, "utf8");
   }
 
-  generateToken(payload: Record<string, any>, expiresIn: string): string {
+  generateToken(payload: Record<string, any>, expiresIn: number): string {
     console.log(payload);
-    return jwt.sign(payload, this.secretKey, { expiresIn });
+
+    return jwt.sign(payload,this.secretKey, { expiresIn });
   }
 
   verifyToken(token: string): Record<string, any> | null {

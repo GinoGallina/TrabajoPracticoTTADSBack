@@ -3,7 +3,7 @@ import mongoose, { Connection } from "mongoose";
 console.log("a");
 // URL de conexión a la base de datos. Cambia esto según tu configuración.
 const dbURL =
-  "mongodb+srv://SolidSnake:gRpu6SxPSWOLTIS6@cluster0.0lyn4ju.mongodb.net/MarketPlace";
+  "mongodb://localhost:27017/MarketPlace";
 
 // Configuración de la conexión a la base de datos
 mongoose.connect(dbURL, {
