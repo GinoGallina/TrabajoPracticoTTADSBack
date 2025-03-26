@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import jwt, { Secret } from "jsonwebtoken";
 import fs from "fs";
-import { IAuthOUser } from "../types/Auth0Token";
+import { IAuthOUser } from "../types/Auth0Token.js";
 class TokenManager {
   private secretKey: Secret;
   private publicKeyFilePath: string = "public-key.key";

@@ -1,8 +1,8 @@
-interface IPaymentType {
-  type: string;
-  state: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// interface IPaymentType {
+//   type: string;
+//   state: string;
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
 
-export default IPaymentType;
+// export default IPaymentType;

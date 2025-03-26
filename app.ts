@@ -1,57 +1,60 @@
-//dotenv
-import dotenv from "dotenv";
-dotenv.config();
-
-import express, { json } from "express"; // require -> commonJS
-import categoryRouter from "./routes/category.js";
-import payment_typeRouter from "./routes/payment_type.js";
-import userRouter from "./routes/user.js";
-import discountRouter from "./routes/discount.js";
-import shipmentRouter from "./routes/shipment.js";
-import reviewRouter from "./routes/review.js";
-// import { corsMiddleware } from './middlewares/cors.js'
-// eslint-disable-next-line no-unused-vars
+import "reflect-metadata";
+import express, { json } from "express";
 import cors from "cors";
-import db from "./config/database.js";
-import sellerRouter from "./routes/seller.js";
-import loginRouter from "./routes/login.js";
-import productRouter from "./routes/product.js";
 
-import "./config/env.js";
-import { authRouter } from "./routes/auth.js";
-import { cartRouter } from "./routes/cart.js";
-import orderRouter from "./routes/order.js";
+// Dont env config
+import "./config/env";
 
-// La asigno para que Eslint no de me problemas
-const conection = db;
+// Database config
+import { createDatabaseIfNotExists, db } from "./config/database.js";
+
+// Routes config
+import createRoutes from "./routes/index.js";
+
+// Check required environment variables
+const requiredEnvVars = [
+	"PORT",
+	"DB_HOST",
+	"DB_PORT",
+	"DB_USER",
+	"DB_PASS",
+	"DB_NAME",
+];
+requiredEnvVars.forEach((varName) => {
+	if (!process.env[varName]) {
+		console.error(`Error: Falta la variable de entorno ${varName}`);
+		process.exit(1);
+	}
+});
 
 const app = express();
 
 app.use(json());
 app.use(cors());
 
-// app.use(corsMiddleware())
+// app.use(helmet()); // Agrega encabezados de seguridad HTTP
+// app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(",") || "*" })); // Restringe accesos
 app.disable("x-powered-by");
 
-app.use("/category", categoryRouter);
-app.use("/payment_type", payment_typeRouter);
-app.use("/products", productRouter);
-app.use("/order", orderRouter);
+// Middleware de manejo de errores centralizado
+// app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+// 	console.error("❌ Error:", err.message);
+// 	res.status(500).json({ error: "Ocurrió un error inesperado" });
+//   });
 
-app.use("/cart", cartRouter);
+const PORT = Number(process.env.PORT) || 3000;
 
-app.use("/user", userRouter);
-app.use("/seller", sellerRouter);
-app.use("/login", loginRouter);
+async function startServer() {
+	try {
+		await createDatabaseIfNotExists();
 
-app.use("/discount", discountRouter);
-app.use("/shipment", shipmentRouter);
-app.use("/review", reviewRouter);
+		app.use("/api", createRoutes(db));
 
-app.use("/auth", authRouter);
+		app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+	} catch (error) {
+		console.error("Error:", error);
+		process.exit(1);
+	}
+}
 
-const PORT = 1234;
-
-app.listen(PORT, () => {
-  console.log(`server listening on port http://localhost:${PORT}`);
-});
+startServer();

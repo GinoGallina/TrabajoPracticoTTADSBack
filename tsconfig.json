@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es2020",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES6",
     "sourceMap": true,
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -12,7 +12,9 @@
     "alwaysStrict": true,
     "skipLibCheck": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "noImplicitAny": true,
+    "skipDefaultLibCheck": true
   },
   "include": ["src/**/*", "**/*.ts"],
   "exclude": ["node_modules"]

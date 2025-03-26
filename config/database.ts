@@ -1,21 +1,59 @@
-import mongoose, { Connection } from "mongoose";
+import { DataSource } from "typeorm";
+import "./env";
 
-console.log("a");
-// URL de conexión a la base de datos. Cambia esto según tu configuración.
-const dbURL =
-  "mongodb+srv://SolidSnake:gRpu6SxPSWOLTIS6@cluster0.0lyn4ju.mongodb.net/MarketPlace";
-
-// Configuración de la conexión a la base de datos
-mongoose.connect(dbURL, {
-  //useNewUrlParser: true,
-  //useUnifiedTopology: true,
-});
-// Manejo de eventos de conexión
-const db: Connection = mongoose.connection;
-
-db.on("error", console.error.bind(console, "Error de conexión a MongoDB:"));
-db.once("open", () => {
-  console.log("Conexión exitosa a la base de datos MongoDB");
+let db = new DataSource({
+	type: "postgres",
+	host: process.env.DB_HOST,
+	port: Number(process.env.DB_PORT),
+	username: process.env.DB_USER,
+	password: process.env.DB_PASS,
+	database: "postgres",
+	synchronize: false,
+	logging: false,
 });
 
-export default db;
+async function createDatabaseIfNotExists() {
+	try {
+		await db.initialize();
+
+		const queryRunner = db.createQueryRunner();
+
+		const result = await queryRunner.query(`
+            SELECT 1 FROM pg_database WHERE datname = '${process.env.DB_NAME}'
+        `);
+
+		if (result.length === 0) {
+			console.log(
+				`Database ${process.env.DB_NAME} doesn't existe. Starting createing it...`,
+			);
+			await queryRunner.query(`
+                CREATE DATABASE "${process.env.DB_NAME}"
+            `);
+			console.log(
+				`Database ${process.env.DB_NAME} created successfully.`,
+			);
+		}
+
+		await db.destroy();
+
+		db = new DataSource({
+			type: "postgres",
+			host: process.env.DB_HOST,
+			port: Number(process.env.DB_PORT),
+			username: process.env.DB_USER,
+			password: process.env.DB_PASS,
+			database: process.env.DB_NAME,
+			entities: ["models/database/*.ts"],
+			synchronize: true,
+			logging: false,
+		});
+
+		await db.initialize();
+		console.log("Database connected");
+	} catch (error) {
+		console.error("Error while creating or connecting Database:", error);
+		process.exit(1);
+	}
+}
+
+export { db, createDatabaseIfNotExists };
