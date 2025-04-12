@@ -1,3 +1,21 @@
+import { Request, Response } from "express";
+import { AuthService } from "../services/AuthService.js";
+import { ILoginRequest, IRegisterRequest } from "../schemas/IAuth.js";
+
+export class AuthController {
+	constructor(private readonly authService: AuthService) {}
+
+	login = async (req: Request<ILoginRequest>, res: Response) => {
+		const response = await this.authService.login(req.body);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	register = async (req: Request<IRegisterRequest>, res: Response) => {
+		const response = await this.authService.register(req.body);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+}
+
 // import { Request, Response, NextFunction } from "express";
 // import TokenManager from "../config/token.js";
 // import { auth } from "express-oauth2-jwt-bearer";

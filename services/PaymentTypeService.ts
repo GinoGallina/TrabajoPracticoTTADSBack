@@ -1,30 +1,30 @@
 import { DataSource } from "typeorm";
-import { CategoryRepository } from "../repository/CategoryRepository.js";
-import { ICategoryCreateRequest, ICategoryGetAllResponse, ICategoryResponse } from "../schemas/ICategory.js";
+import { PaymentTypeRepository } from "../repository/PaymentTypeRepository.js";
+import { IPaymentTypeCreateRequest, IPaymentTypeGetAllResponse, IPaymentTypeResponse } from "../schemas/IPaymentType.js";
 import { IBaseResponse } from "../schemas/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 
 import { IGetCombo } from "../schemas/shared/IGetCombo.js";
 
-export class CategoryService {
+export class PaymentTypeService {
 	constructor(
-		private readonly categoryRepository: CategoryRepository,
+		private readonly paymentTypeRepository: PaymentTypeRepository,
 		private readonly db: DataSource,
 	) {}
 
-	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<ICategoryGetAllResponse | null>> {
+	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IPaymentTypeGetAllResponse | null>> {
 		try {
-			const categories = await this.categoryRepository.getAll(query);
+			const paymentTypes = await this.paymentTypeRepository.getAll(query);
 			return {
 				message: "",
 				data: {
-					categories: categories.items.map((x) => ({
+					paymentTypes: paymentTypes.items.map((x) => ({
 						id: x.Id.toString(),
 						name: x.Name,
 						createdAt: x.CreatedAt.toISOString(),
 					})),
-					totalCount: categories?.totalCount || 0,
+					totalCount: paymentTypes?.totalCount || 0,
 				},
 				error: null,
 				success: true,
@@ -38,19 +38,19 @@ export class CategoryService {
 		}
 	}
 
-	async getOne(id: string): Promise<IBaseResponse<ICategoryResponse | null>> {
+	async getOne(id: string): Promise<IBaseResponse<IPaymentTypeResponse | null>> {
 		try {
-			const category = await this.categoryRepository.getById(id);
-			if (!category)
+			const paymentType = await this.paymentTypeRepository.getById(id);
+			if (!paymentType)
 				return createErrorResponse("Categoría no encontrada", {
 					code: 404,
 					message: Messages.Error.EntityNotFound("Categoría", true),
 				});
 
 			return createSuccessResponse("Categoría obtenida correctamente", {
-				id: category.Id.toString(),
-				name: category.Name,
-				createdAt: category.CreatedAt.toISOString(),
+				id: paymentType.Id.toString(),
+				name: paymentType.Name,
+				createdAt: paymentType.CreatedAt.toISOString(),
 			});
 		} catch (e) {
 			console.log(e);
@@ -62,7 +62,7 @@ export class CategoryService {
 	}
 	async getCombo(): Promise<IBaseResponse<IGetCombo | null>> {
 		try {
-			const items = await this.categoryRepository.getCombo();
+			const items = await this.paymentTypeRepository.getCombo();
 			return {
 				message: "",
 				data: {
@@ -80,7 +80,7 @@ export class CategoryService {
 		}
 	}
 
-	async create(rq: ICategoryCreateRequest): Promise<IBaseResponse<ICategoryResponse | null>> {
+	async create(rq: IPaymentTypeCreateRequest): Promise<IBaseResponse<IPaymentTypeResponse | null>> {
 		// Crear queryRunner
 		const queryRunner = this.db.createQueryRunner();
 		await queryRunner.connect();
@@ -98,7 +98,7 @@ export class CategoryService {
 			}
 
 			// Not duplicated name
-			if ((await this.categoryRepository.findByName(rq.Name, manager)) != null) {
+			if ((await this.paymentTypeRepository.findByName(rq.Name, manager)) != null) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al crear la categoría", {
 					code: 400,
@@ -106,14 +106,14 @@ export class CategoryService {
 				});
 			}
 
-			const category = await this.categoryRepository.create(rq, manager);
+			const paymentType = await this.paymentTypeRepository.create(rq, manager);
 
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Categoría", true), {
-				id: category.Id.toString(),
-				name: category.Name,
-				createdAt: category.CreatedAt.toISOString(),
+				id: paymentType.Id.toString(),
+				name: paymentType.Name,
+				createdAt: paymentType.CreatedAt.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -127,7 +127,7 @@ export class CategoryService {
 		}
 	}
 
-	async delete(id: string): Promise<IBaseResponse<ICategoryResponse | null>> {
+	async delete(id: string): Promise<IBaseResponse<IPaymentTypeResponse | null>> {
 		// Crear queryRunner
 		const queryRunner = this.db.createQueryRunner();
 		await queryRunner.connect();
@@ -136,9 +136,9 @@ export class CategoryService {
 
 		try {
 			// Check if exists
-			const existingCategory = await this.categoryRepository.getById(id);
+			const existingPaymentType = await this.paymentTypeRepository.getById(id);
 
-			if (existingCategory == null) {
+			if (existingPaymentType == null) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al borrar la categoría", {
 					code: 404,
@@ -146,16 +146,16 @@ export class CategoryService {
 				});
 			}
 
-			const deleteCategoryResult = await this.categoryRepository.delete(id, manager);
+			const deletePaymentTypeResult = await this.paymentTypeRepository.delete(id, manager);
 
-			if (!deleteCategoryResult) throw new Error();
+			if (!deletePaymentTypeResult) throw new Error();
 
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-				id: existingCategory.Id.toString(),
-				name: existingCategory.Name,
-				createdAt: existingCategory.CreatedAt.toISOString(),
+				id: existingPaymentType.Id.toString(),
+				name: existingPaymentType.Name,
+				createdAt: existingPaymentType.CreatedAt.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -169,17 +169,17 @@ export class CategoryService {
 		}
 	}
 
-	// 	const category = await this.categoryRepository.create({ name });
+	// 	const paymentType = await this.paymentTypeRepository.create({ name });
 	// 	return {
 	// 		message: "Categoría creada correctamente",
-	// 		data: category,
+	// 		data: paymentType,
 	// 		error: null,
 	// 		success: true,
 	// 	};
 	// }
 }
 
-// import { CategoryRepository } from "../repository/userRepository.js";
+// import { PaymentTypeRepository } from "../repository/userRepository.js";
 
 // const userRepository = new UserRepository();
 // const productRepository = new ProductRepository();

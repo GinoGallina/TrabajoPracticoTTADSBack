@@ -6,6 +6,10 @@ export interface IBaseResponse<T> {
 }
 
 export interface IBaseResponseError {
-	Code: number;
-	Message: string;
+	code: number;
+	message: string;
+}
+
+export interface IGenericGetAllResponse {
+	totalCount: number;
 }

@@ -1,28 +1,14 @@
-import {
-	Entity,
-	PrimaryGeneratedColumn,
-	Column,
-	CreateDateColumn,
-	UpdateDateColumn,
-	DeleteDateColumn,
-} from "typeorm";
+import { Entity, Column, OneToMany } from "typeorm";
+import { BaseModel } from "./BaseModel.js";
+import { Product } from "./Product.js";
 
 @Entity("Category")
-export class Category {
-	@PrimaryGeneratedColumn()
-	Id!: number;
-
+export class Category extends BaseModel {
 	@Column({ type: "varchar", unique: true })
 	Name!: string;
 
-	@CreateDateColumn()
-	CreatedAt!: Date;
-
-	@UpdateDateColumn()
-	UpdatedAt!: Date;
-
-	@DeleteDateColumn({ nullable: true })
-	DeletedAt!: Date | null;
+	@OneToMany(() => Product, (product) => product.Category)
+	Products!: Product[];
 }
 
 // import mongoose, { Schema, Document, Model } from "mongoose";

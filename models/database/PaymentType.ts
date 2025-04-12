@@ -1,3 +1,12 @@
+import { Entity, Column } from "typeorm";
+import { BaseModel } from "./BaseModel.js";
+
+@Entity("PaymentType")
+export class PaymentType extends BaseModel {
+	@Column({ type: "varchar", unique: true })
+	Name!: string;
+}
+
 // import mongoose, { Document, Schema, Model } from "mongoose";
 // import mongooseUniqueValidator from "mongoose-unique-validator";
 // import IPaymentType from "../../types/IPaymentType.js";

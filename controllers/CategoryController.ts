@@ -1,32 +1,34 @@
 import { Request, Response } from "express";
 import { CategoryService } from "../services/CategoryService.js";
-import {
-	CategoryCreateRequestSchema,
-	CategoryGetOneRequestSchema,
-} from "../schemas/category.js";
+import { ICategoryCreateRequest, ICategoryDeleteRequest, ICategoryGetOneRequest } from "../schemas/ICategory.js";
+import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
 
 export class CategoryController {
 	constructor(private readonly categoryService: CategoryService) {}
 
-	getAll = async (req: Request, res: Response) => {
-		const response = await this.categoryService.getAll();
-		res.status(response.success ? 200 : 400).json(response);
+	getAll = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
+		const response = await this.categoryService.getAll(req.query);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
 	};
 
-	getOne = async (
-		req: Request<CategoryGetOneRequestSchema>,
-		res: Response,
-	) => {
-		const response = await this.categoryService.getOne(req.params.id);
-		res.status(response.success ? 200 : 400).json(response);
+	getOne = async (req: Request<object, object, object, ICategoryGetOneRequest>, res: Response) => {
+		const response = await this.categoryService.getOne(req.query.id);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
 	};
 
-	create = async (
-		req: Request<CategoryCreateRequestSchema>,
-		res: Response,
-	) => {
-		const response = await this.categoryService.createCategory(req.body);
-		res.status(response.success ? 201 : 400).json(response);
+	getCombo = async (req: Request, res: Response) => {
+		const response = await this.categoryService.getCombo();
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	create = async (req: Request<ICategoryCreateRequest>, res: Response) => {
+		const response = await this.categoryService.create(req.body);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+
+	delete = async (req: Request<ICategoryDeleteRequest>, res: Response) => {
+		const response = await this.categoryService.delete(req.body.Id);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
 	};
 }
 

@@ -10,16 +10,11 @@ import { createDatabaseIfNotExists, db } from "./config/database.js";
 
 // Routes config
 import createRoutes from "./routes/index.js";
+import { seedDatabase } from "./utils/SeederHelper.js";
+import { authenticateJWT } from "./middleware/Jwt/Authenticate.js";
 
 // Check required environment variables
-const requiredEnvVars = [
-	"PORT",
-	"DB_HOST",
-	"DB_PORT",
-	"DB_USER",
-	"DB_PASS",
-	"DB_NAME",
-];
+const requiredEnvVars = ["PORT", "DB_HOST", "DB_PORT", "DB_USER", "DB_PASS", "DB_NAME"];
 requiredEnvVars.forEach((varName) => {
 	if (!process.env[varName]) {
 		console.error(`Error: Falta la variable de entorno ${varName}`);
@@ -47,6 +42,19 @@ const PORT = Number(process.env.PORT) || 3000;
 async function startServer() {
 	try {
 		await createDatabaseIfNotExists();
+
+		await seedDatabase(db);
+
+		// JWT
+		app.use(
+			authenticateJWT.unless({
+				path: [
+					{ url: "/api/auth/login", methods: ["POST"] },
+					{ url: "/api/auth/register", methods: ["POST"] },
+					{ url: "/api/role/getCombo", methods: ["GET"] },
+				],
+			}),
+		);
 
 		app.use("/api", createRoutes(db));
 

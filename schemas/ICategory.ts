@@ -1,15 +1,30 @@
-export interface CategoryResponseSchema {
-	Id: number;
-	Name: string;
-	CreatedAt: string;
-}
-export interface CategoryGetOneRequestSchema {
-	id: string;
+import { IGenericGetAllResponse } from "./shared/IBaseResponse.js";
+
+// Get All
+export interface ICategoryGetAllResponse extends IGenericGetAllResponse {
+	categories: { id: string; name: string; createdAt: string }[];
 }
 
-export interface CategoryCreateRequestSchema {
+// Get one and responses
+export interface ICategoryGetOneRequest {
+	id: string;
+}
+export interface ICategoryResponse {
+	id: string;
+	name: string;
+	createdAt: string;
+}
+
+// Create
+export interface ICategoryCreateRequest {
 	Name: string;
 }
+
+// Delete
+export interface ICategoryDeleteRequest {
+	Id: string;
+}
+
 // export interface CategoryGetOneSchema
 
 // import { z } from "zod";

@@ -1,45 +1,11 @@
-import { Entity, Column, OneToMany, ManyToMany, JoinTable } from "typeorm";
+import { Entity, Column } from "typeorm";
 import { BaseModel } from "./BaseModel.js";
-import { Product } from "./Product.js";
-import { Role } from "./Role.js";
+import { RoleEnum } from "../../schemas/IRole.js";
 
-@Entity("User")
-export class User extends BaseModel {
-	@Column({ type: "varchar", unique: true })
-	Email!: string;
-
-	@Column({ type: "varchar", unique: true })
-	Username!: string;
-
-	@Column({ type: "varchar" })
-	Password!: string;
-
-	@Column({ type: "varchar" })
-	Address!: string;
-
-	// Seller fields
-	@Column({ type: "varchar", nullable: true })
-	StoreName?: string;
-
-	@Column({ type: "text", nullable: true })
-	StoreDescription?: string;
-
-	@Column({ type: "varchar", nullable: true })
-	Cbu?: string;
-
-	@Column({ type: "varchar", nullable: true })
-	Cuit?: string;
-
-	@OneToMany(() => Product, (product) => product.Category)
-	Products!: Product[];
-
-	@ManyToMany(() => Role, { eager: true })
-	@JoinTable({
-		name: "UserRoles",
-		joinColumn: { name: "UserId", referencedColumnName: "Id" },
-		inverseJoinColumn: { name: "RoleId", referencedColumnName: "Id" },
-	})
-	Roles!: Role[];
+@Entity("Role")
+export class Role extends BaseModel {
+	@Column({ type: "enum", enum: RoleEnum, default: RoleEnum.User })
+	Name!: RoleEnum.Admin | RoleEnum.User | RoleEnum.Seller;
 }
 
 // import mongoose, { Document, Schema, Model } from "mongoose";

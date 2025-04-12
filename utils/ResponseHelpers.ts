@@ -1,12 +1,6 @@
-import {
-	IBaseResponse,
-	IBaseResponseError,
-} from "../schemas/shared/IBaseResponse.js";
+import { IBaseResponse, IBaseResponseError } from "../schemas/shared/IBaseResponse.js";
 
-export function createSuccessResponse<T>(
-	message: string,
-	data: T,
-): IBaseResponse<T> {
+export function createSuccessResponse<T>(message: string, data: T): IBaseResponse<T> {
 	return {
 		message,
 		data,
@@ -15,14 +9,11 @@ export function createSuccessResponse<T>(
 	};
 }
 
-export function createErrorResponse(
-	message: string,
-	error?: IBaseResponseError,
-): IBaseResponse<null> {
+export function createErrorResponse(message: string, error?: IBaseResponseError): IBaseResponse<null> {
 	return {
 		message,
 		data: null,
-		error: error || { Code: 500, Message: "Error interno del servidor" },
+		error: error || { code: 500, message: "Error interno del servidor" },
 		success: false,
 	};
 }

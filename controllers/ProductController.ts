@@ -1,3 +1,36 @@
+import { Request, Response } from "express";
+import { ProductService } from "../services/ProductService.js";
+import { IProductCreateRequest, IProductDeleteRequest, IProductGetOneRequest } from "../schemas/IProduct.js";
+import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
+
+export class ProductController {
+	constructor(private readonly productService: ProductService) {}
+
+	getAllMyProducts = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
+		const response = await this.productService.getAllMyProducts(req.query);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	getAll = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
+		const response = await this.productService.getAll(req.query);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	getOne = async (req: Request<object, object, object, IProductGetOneRequest>, res: Response) => {
+		const response = await this.productService.getOne(req.query.id);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	create = async (req: Request<IProductCreateRequest>, res: Response) => {
+		const response = await this.productService.create(req.body);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+
+	delete = async (req: Request<IProductDeleteRequest>, res: Response) => {
+		const response = await this.productService.delete(req.params.id);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+}
 // import { Request, Response } from "express";
 // import { ProductRepository } from "../repository/productRepository.js";
 // import { validateProduct } from "../schemas/product.js";

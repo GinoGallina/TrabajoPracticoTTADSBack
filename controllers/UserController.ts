@@ -1,3 +1,37 @@
+import { Request, Response } from "express";
+import { UserService } from "../services/UserService.js";
+import { IUserCreateRequest, IUserDeleteRequest, IUserGetComboRequest, IUserGetOneRequest } from "../schemas/IUser.js";
+import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
+
+export class UserController {
+	constructor(private readonly categoryService: UserService) {}
+
+	getAll = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
+		const response = await this.categoryService.getAll(req.query);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	getOne = async (req: Request<object, object, object, IUserGetOneRequest>, res: Response) => {
+		const response = await this.categoryService.getOne(req.query.id);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	getCombo = async (req: Request<IUserGetComboRequest>, res: Response) => {
+		const response = await this.categoryService.getCombo(req.body);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	create = async (req: Request<IUserCreateRequest>, res: Response) => {
+		const response = await this.categoryService.create(req.body);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+
+	delete = async (req: Request<IUserDeleteRequest>, res: Response) => {
+		const response = await this.categoryService.delete(req.body.Id);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+}
+
 // import { Request, Response } from "express";
 // import { default as bcrypt } from "bcryptjs";
 // import { validatePartialUserUpdate, validateUser } from "../schemas/user.js";

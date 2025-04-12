@@ -1,10 +1,8 @@
 import { DataSource, EntityManager } from "typeorm";
 import { db } from "../config/database.js";
 
-export async function withTransaction<T>(
-	task: (manager: EntityManager) => Promise<T>,
-	dataSource: DataSource = db,
-): Promise<T> {
+// TODO
+export async function withTransaction<T>(task: (manager: EntityManager) => Promise<T>, dataSource: DataSource = db): Promise<T> {
 	const queryRunner = dataSource.createQueryRunner();
 	await queryRunner.connect();
 	await queryRunner.startTransaction();
@@ -20,10 +18,3 @@ export async function withTransaction<T>(
 		await queryRunner.release();
 	}
 }
-
-// export function hasManager<T>(
-// 	repository: Repository<T>,
-// 	manager?: EntityManager,
-// ) {
-// 	manager ? manager.getRepository(T) : repository;
-// }

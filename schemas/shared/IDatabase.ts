@@ -1,4 +1,4 @@
-import { Repository } from "typeorm";
+import { ObjectIdColumn, Repository } from "typeorm";
 
 export interface IDatabase {
 	getRepository<T>(entity: T): Repository<T>;

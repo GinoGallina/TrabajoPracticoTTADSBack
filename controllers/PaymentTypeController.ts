@@ -1,3 +1,37 @@
+import { Request, Response } from "express";
+import { PaymentTypeService } from "../services/PaymentTypeService.js";
+import { IPaymentTypeCreateRequest, IPaymentTypeDeleteRequest, IPaymentTypeGetOneRequest } from "../schemas/IPaymentType.js";
+import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
+
+export class PaymentTypeController {
+	constructor(private readonly paymentTypeService: PaymentTypeService) {}
+
+	getAll = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
+		const response = await this.paymentTypeService.getAll(req.query);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	getOne = async (req: Request<object, object, object, IPaymentTypeGetOneRequest>, res: Response) => {
+		const response = await this.paymentTypeService.getOne(req.query.id);
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	getCombo = async (req: Request, res: Response) => {
+		const response = await this.paymentTypeService.getCombo();
+		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
+	};
+
+	create = async (req: Request<IPaymentTypeCreateRequest>, res: Response) => {
+		const response = await this.paymentTypeService.create(req.body);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+
+	delete = async (req: Request<IPaymentTypeDeleteRequest>, res: Response) => {
+		const response = await this.paymentTypeService.delete(req.body.Id);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+}
+
 // import { PaymentType } from "../models/database/payment_type.js";
 // import { validatePaymentType } from "../schemas/payment_type.js";
 // import { Request, Response } from "express";
@@ -14,7 +48,6 @@
 //       res.status(500).json({ error: "Error getting Payment Types" });
 //     }
 //   },
-
 //   getPaymentTypeById: async (req: Request, res: Response) => {
 //     try {
 //       const id = req.params.id;

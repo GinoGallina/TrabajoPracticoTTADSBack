@@ -1,14 +1,31 @@
 import { Category } from "../models/database/Category.js";
 import { EntityManager, IsNull, Repository } from "typeorm";
-import { CategoryCreateRequestSchema } from "../schemas/category.js";
+
+import { ICategoryCreateRequest } from "../schemas/ICategory.js";
+import { GetComboItem } from "../schemas/shared/IGetCombo.js";
+import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
 
 export class CategoryRepository {
 	constructor(private readonly repository: Repository<Category>) {}
 
-	async getAll(): Promise<Category[]> {
-		return await this.repository.find({
+	getRepo = (manager?: EntityManager) => {
+		return manager ? manager.getRepository(Category) : this.repository;
+	};
+
+	async getAll(query: IGenericGetAllRequest): Promise<{ items: Category[]; totalCount: number }> {
+		const validOrderColumns = createValidOrderColumns<Category>(["Name", "CreatedAt"]);
+
+		const { skip, take, order } = getAllPaginationOptions<Category>(query, validOrderColumns);
+
+		const [items, totalCount] = await this.repository.findAndCount({
 			where: { DeletedAt: IsNull() },
+			select: { Id: true, Name: true, CreatedAt: true },
+			order,
+			skip,
+			take,
 		});
+
+		return { items, totalCount };
 	}
 
 	async getById(id: string): Promise<Category | null> {
@@ -19,17 +36,27 @@ export class CategoryRepository {
 		const category = await this.repository.findOne({
 			where: { Id: categoryId, DeletedAt: IsNull() },
 		});
+
 		if (!category) return null;
+
 		return category;
 	}
 
-	async findByName(
-		name: string,
-		manager?: EntityManager,
-	): Promise<Category | null> {
-		const repo = manager
-			? manager.getRepository(Category)
-			: this.repository;
+	async getCombo(): Promise<GetComboItem[]> {
+		const categories = await this.repository.find({
+			select: { Id: true, Name: true },
+			where: { DeletedAt: IsNull() },
+			order: { Name: "ASC" },
+		});
+
+		return categories.map((c) => ({
+			id: c.Id.toString(),
+			label: c.Name,
+		}));
+	}
+
+	async findByName(name: string, manager?: EntityManager): Promise<Category | null> {
+		const repo = this.getRepo(manager);
 		const category = await repo.findOne({
 			where: { Name: name, DeletedAt: IsNull() },
 		});
@@ -37,29 +64,26 @@ export class CategoryRepository {
 		return category;
 	}
 
-	async create(
-		category: CategoryCreateRequestSchema,
-		manager?: EntityManager,
-	): Promise<Category> {
-		const repo = manager
-			? manager.getRepository(Category)
-			: this.repository;
+	async create(category: ICategoryCreateRequest, manager?: EntityManager): Promise<Category> {
+		const repo = this.getRepo(manager);
 		return await repo.save(category);
 	}
 
-	async update(
-		id: string,
-		data: Partial<Category>,
-	): Promise<Category | null> {
-		const category = await this.getById(id);
-		if (!category) return null;
+	// async update(id: string, data: Partial<Category>): Promise<Category | null> {
+	// 	const category = await this.getById(id);
+	// 	if (!category) return null;
 
-		Object.assign(category, data);
-		return await this.repository.save(category);
-	}
+	// 	Object.assign(category, data);
+	// 	return await this.repository.save(category);
+	// }
 
-	async delete(id: number): Promise<boolean> {
-		const result = await this.repository.softDelete(id);
+	async delete(id: string, manager?: EntityManager): Promise<boolean | null> {
+		const categoryId = Number(id);
+
+		if (isNaN(categoryId)) return null;
+
+		const repo = this.getRepo(manager);
+		const result = await repo.softDelete(id);
 		return result.affected !== 0;
 	}
 }

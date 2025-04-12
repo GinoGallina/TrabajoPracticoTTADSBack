@@ -1,3 +1,30 @@
+import { IGenericGetAllResponse } from "./shared/IBaseResponse.js";
+
+// Get All
+export interface IPaymentTypeGetAllResponse extends IGenericGetAllResponse {
+	paymentTypes: { id: string; name: string; createdAt: string }[];
+}
+
+// Get one and responses
+export interface IPaymentTypeGetOneRequest {
+	id: string;
+}
+export interface IPaymentTypeResponse {
+	id: string;
+	name: string;
+	createdAt: string;
+}
+
+// Create
+export interface IPaymentTypeCreateRequest {
+	Name: string;
+}
+
+// Delete
+export interface IPaymentTypeDeleteRequest {
+	Id: string;
+}
+
 // import { z } from "zod";
 // import StateSchema from "../types/states.js";
 
