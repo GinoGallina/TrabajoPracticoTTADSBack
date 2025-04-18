@@ -1,17 +1,11 @@
 import { Router } from "express";
+import { container } from "tsyringe";
 import { PaymentTypeController } from "../controllers/PaymentTypeController.js";
-import { PaymentTypeRepository } from "../repository/PaymentTypeRepository.js";
-import { PaymentType } from "../models/database/PaymentType.js";
-import { PaymentTypeService } from "../services/PaymentTypeService.js";
-import { DataSource } from "typeorm";
 
-export const PaymentTypeRouter = (db: DataSource) => {
+export const PaymentTypeRouter = () => {
 	const router = Router();
 
-	const paymentTypeRepository = new PaymentTypeRepository(db.getRepository(PaymentType));
-
-	const paymentTypeService = new PaymentTypeService(paymentTypeRepository, db);
-	const paymentTypeController = new PaymentTypeController(paymentTypeService);
+	const paymentTypeController = container.resolve(PaymentTypeController);
 
 	router.get("/getAll", paymentTypeController.getAll.bind(paymentTypeController));
 	router.get("/getOne", paymentTypeController.getOne.bind(paymentTypeController));

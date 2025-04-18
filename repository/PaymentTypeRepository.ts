@@ -1,12 +1,18 @@
 import { PaymentType } from "../models/database/PaymentType.js";
 import { EntityManager, IsNull, Repository } from "typeorm";
 
-import { IPaymentTypeCreateRequest } from "../schemas/IPaymentType.js";
-import { GetComboItem } from "../schemas/shared/IGetCombo.js";
+import { IPaymentTypeCreateRequest } from "../types/IPaymentType.js";
+import { GetComboItem } from "../types/shared/IGetCombo.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class PaymentTypeRepository {
-	constructor(private readonly repository: Repository<PaymentType>) {}
+	constructor(
+		@inject("PaymentTypeTypeORMRepository")
+		private readonly repository: Repository<PaymentType>,
+	) {}
 
 	getRepo = (manager?: EntityManager) => {
 		return manager ? manager.getRepository(PaymentType) : this.repository;
@@ -50,7 +56,7 @@ export class PaymentTypeRepository {
 		});
 
 		return categories.map((c) => ({
-			id: c.Id.toString(),
+			id: c.Id!.toString(),
 			label: c.Name,
 		}));
 	}

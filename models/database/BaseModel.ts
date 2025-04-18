@@ -2,14 +2,14 @@ import { PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateC
 
 export abstract class BaseModel {
 	@PrimaryGeneratedColumn()
-	Id!: number;
+	Id?: number;
 
 	@CreateDateColumn()
-	CreatedAt!: Date;
+	CreatedAt?: Date;
 
 	@UpdateDateColumn()
-	UpdatedAt!: Date;
+	UpdatedAt?: Date;
 
 	@DeleteDateColumn({ nullable: true })
-	DeletedAt!: Date | null;
+	DeletedAt?: Date | null;
 }

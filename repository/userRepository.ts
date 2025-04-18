@@ -1,15 +1,19 @@
 import { EntityManager, In, IsNull, Repository } from "typeorm";
 import { User } from "../models/database/User.js";
 
-import { IUserCreateRequest, IUserGetComboRequest, UserFindByType } from "../schemas/IUser.js";
+import { IUserCreateRequest, IUserGetComboRequest, UserFindByType } from "../types/IUser.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
 import { Role } from "../models/database/Role.js";
-import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
-import { GetComboItem } from "../schemas/shared/IGetCombo.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { GetComboItem } from "../types/shared/IGetCombo.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class UserRepository {
 	constructor(
+		@inject("UserTypeORMRepository")
 		private readonly repository: Repository<User>,
+		@inject("RoleTypeORMRepository")
 		private readonly roleRepository: Repository<Role>,
 	) {}
 
@@ -60,7 +64,7 @@ export class UserRepository {
 		});
 
 		return users.map((c) => ({
-			id: c.Id.toString(),
+			id: c.Id!.toString(),
 			label: c.Username,
 		}));
 	}

@@ -1,30 +1,46 @@
 import { DataSource, In, Repository } from "typeorm";
-import { IBaseResponse } from "../schemas/shared/IBaseResponse.js";
+import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
-import { ILoginRequest, ILoginResponse, IRegisterRequest, IRegisterResponse } from "../schemas/IAuth.js";
+import { ILoginRequest, ILoginResponse, IRegisterRequest, IRegisterResponse } from "../types/IAuth.js";
 import { UserService } from "./UserService.js";
 import { Role } from "../models/database/Role.js";
-import { RoleEnum } from "../schemas/IRole.js";
+import { RoleEnum } from "../types/IRole.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { inject, injectable } from "tsyringe";
+import { IUserToken } from "../types/shared/IToken.js";
+import { ContextService } from "./ContextService.js";
 
+@injectable()
 export class AuthService {
 	constructor(
-		private readonly db: DataSource,
-		private readonly userService: UserService,
-		private readonly roleRepository: Repository<Role>,
+		@inject("DataSource") private readonly db: DataSource,
+		@inject("UserService") private readonly userService: UserService,
+		@inject("RoleTypeORMRepository") private readonly roleRepository: Repository<Role>,
 	) {}
 
 	buildToken(id: number, roles: string[]) {
 		const expiresInSeconds = 24 * 60 * 60;
 		const expirationDate = new Date(Date.now() + expiresInSeconds * 1000);
 
-		const token = jwt.sign({ userId: id, roles }, process.env.JWT_SECRET!, {
+		const token = jwt.sign({ id, roles }, process.env.JWT_SECRET!, {
 			expiresIn: expiresInSeconds,
 		});
 
 		return { token, expirationDate };
+	}
+
+	getToken(): IUserToken {
+		const req = ContextService.getRequest();
+
+		if (!req.auth) {
+			throw new Error("No se ha podido encontrar el token");
+		}
+
+		const user = req.auth as IUserToken;
+
+		return user;
 	}
 
 	async register(rq: IRegisterRequest): Promise<IBaseResponse<IRegisterResponse | null>> {
@@ -104,13 +120,13 @@ export class AuthService {
 
 			// JWT
 			const { token, expirationDate } = this.buildToken(
-				user.Id,
+				user.Id!,
 				user.Roles.map((x) => x.Name),
 			);
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Usuario", true), {
 				user: {
-					id: user.Id.toString(),
+					id: user.Id!.toString(),
 					roles: user.Roles.map((x) => x.Name),
 					username: user.Username,
 					email: user.Email,

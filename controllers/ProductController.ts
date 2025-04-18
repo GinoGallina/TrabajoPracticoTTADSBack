@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { ProductService } from "../services/ProductService.js";
-import { IProductCreateRequest, IProductDeleteRequest, IProductGetOneRequest } from "../schemas/IProduct.js";
-import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
+import { IProductCreateRequest, IProductDeleteRequest, IProductGetOneRequest } from "../types/IProduct.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class ProductController {
-	constructor(private readonly productService: ProductService) {}
+	constructor(@inject("ProductService") private readonly productService: ProductService) {}
 
 	getAllMyProducts = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
 		const response = await this.productService.getAllMyProducts(req.query);

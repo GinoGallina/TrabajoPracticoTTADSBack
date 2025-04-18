@@ -3,7 +3,7 @@
 // 		Object.entries(fields).filter(([, value]) => ["string", "number", "boolean"].includes(typeof value) || value === null),
 // 	);
 
-import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 
 export function createValidOrderColumns<T>(columns: (keyof T)[]): Record<string, keyof T> {
 	return Object.fromEntries(columns.map((c) => [c.toString().toLowerCase(), c])) as Record<string, keyof T>;

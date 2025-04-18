@@ -1,26 +1,32 @@
 import { DataSource, EntityManager, QueryRunner } from "typeorm";
 import { ProductRepository } from "../repository/ProductRepository.js";
-import { IBaseResponse } from "../schemas/shared/IBaseResponse.js";
+import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import {
 	IProductCreateRequest,
 	IProductGetAllRequest,
-	IProductGetAllRequest2,
+	IMyProductGetAllRequest,
 	IProductGetAllResponse,
 	IProductResponse,
-} from "../schemas/IProduct.js";
+} from "../types/IProduct.js";
 import { validateFields } from "../utils/ServiceHelpers.js";
 import { CategoryService } from "./CategoryService.js";
 import { UserService } from "./UserService.js";
+import { injectable, inject } from "tsyringe";
+import { BaseService } from "./BaseService.js";
+import { Product } from "../models/database/Product.js";
 
-export class ProductService {
+@injectable()
+export class ProductService extends BaseService<Product> {
 	constructor(
-		private readonly db: DataSource,
-		private readonly productRepository: ProductRepository,
-		private readonly categoryService: CategoryService,
-		private readonly userService: UserService,
-	) {}
+		@inject("DataSource") private readonly db: DataSource,
+		@inject("ProductRepository") private readonly productRepository: ProductRepository,
+		@inject("CategoryService") private readonly categoryService: CategoryService,
+		@inject("UserService") private readonly userService: UserService,
+	) {
+		super(productRepository.getRepo());
+	}
 
 	validateProduct = async (rq: IProductCreateRequest, queryRunner: QueryRunner, manager: EntityManager) => {
 		const validationRules = [
@@ -59,7 +65,7 @@ export class ProductService {
 				message: Messages.Error.UniqueField("nombre"),
 			});
 		}
-
+		// Valid category
 		if ((await this.categoryService.getOne(rq.CategoryId))?.data == null) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el producto", {
@@ -67,7 +73,7 @@ export class ProductService {
 				message: Messages.Error.EntityNotFound("Categoría", true),
 			});
 		}
-
+		// Valid user
 		if ((await this.userService.getOne(rq.UserId))?.data == null) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el producto", {
@@ -79,21 +85,21 @@ export class ProductService {
 		return null;
 	};
 
-	async getAllMyProducts(query: IProductGetAllRequest): Promise<IBaseResponse<IProductGetAllResponse | null>> {
+	async getAllMyProducts(query: IMyProductGetAllRequest): Promise<IBaseResponse<IProductGetAllResponse | null>> {
 		try {
 			const products = await this.productRepository.getAllMyProducts(query);
 			return {
 				message: "",
 				data: {
 					products: products.items.map((x) => ({
-						id: x.Id.toString(),
+						id: x.Id!.toString(),
 						name: x.Name,
 						description: x.Description,
 						price: x.Price,
 						stock: x.Stock,
 						categoryName: x.Category.Name,
-						categoryId: x.Category.Id.toString(),
-						createdAt: x.CreatedAt.toISOString(),
+						categoryId: x.Category.Id!.toString(),
+						createdAt: x.CreatedAt!.toISOString(),
 					})),
 					totalCount: products?.totalCount || 0,
 				},
@@ -108,21 +114,22 @@ export class ProductService {
 			});
 		}
 	}
-	async getAll(query: IProductGetAllRequest2): Promise<IBaseResponse<IProductGetAllResponse | null>> {
+
+	async getAll(query: IProductGetAllRequest): Promise<IBaseResponse<IProductGetAllResponse | null>> {
 		try {
 			const products = await this.productRepository.getAll(query);
 			return {
 				message: "",
 				data: {
 					products: products.items.map((x) => ({
-						id: x.Id.toString(),
+						id: x.Id!.toString(),
 						name: x.Name,
 						description: x.Description,
 						price: x.Price,
 						stock: x.Stock,
 						categoryName: x.Category.Name,
-						categoryId: x.Category.Id.toString(),
-						createdAt: x.CreatedAt.toISOString(),
+						categoryId: x.Category.Id!.toString(),
+						createdAt: x.CreatedAt!.toISOString(),
 					})),
 					totalCount: products?.totalCount || 0,
 				},
@@ -148,15 +155,15 @@ export class ProductService {
 				});
 
 			return createSuccessResponse("Producto obtenido correctamente", {
-				id: product.Id,
+				id: product.Id!,
 				name: product.Name,
 				description: product.Description,
 				price: product.Price,
 				stock: product.Stock,
 				image: product.Image,
-				categoryId: product.Category.Id.toString(),
-				userId: product.User.Id.toString(),
-				createdAt: product.CreatedAt.toISOString(),
+				categoryId: product.Category.Id!.toString(),
+				userId: product.User.Id!.toString(),
+				createdAt: product.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			console.log(e);
@@ -186,13 +193,13 @@ export class ProductService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Producto"), {
-				id: product.Id,
+				id: product.Id!,
 				name: product.Name,
 				description: product.Description,
 				price: product.Price,
 				stock: product.Stock,
 				image: product.Image,
-				createdAt: product.CreatedAt.toISOString(),
+				createdAt: product.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			console.log(e);
@@ -232,13 +239,13 @@ export class ProductService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría"), {
-				id: existingProduct.Id,
+				id: existingProduct.Id!,
 				name: existingProduct.Name,
 				description: existingProduct.Description,
 				price: existingProduct.Price,
 				stock: existingProduct.Stock,
 				image: existingProduct.Image,
-				createdAt: existingProduct.CreatedAt.toISOString(),
+				createdAt: existingProduct.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			console.log(e);

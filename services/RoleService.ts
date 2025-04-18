@@ -1,14 +1,12 @@
-import { DataSource } from "typeorm";
-import { IBaseResponse } from "../schemas/shared/IBaseResponse.js";
+import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse } from "../utils/ResponseHelpers.js";
-import { IGetCombo } from "../schemas/shared/IGetCombo.js";
+import { IGetCombo } from "../types/shared/IGetCombo.js";
 import { RoleRepository } from "../repository/RoleRepository.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class RoleService {
-	constructor(
-		private readonly roleRepository: RoleRepository,
-		private readonly db: DataSource,
-	) {}
+	constructor(@inject("RoleRepository") private readonly roleRepository: RoleRepository) {}
 
 	async getCombo(): Promise<IBaseResponse<IGetCombo | null>> {
 		try {

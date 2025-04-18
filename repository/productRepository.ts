@@ -1,17 +1,21 @@
+import { inject, injectable } from "tsyringe";
 import { EntityManager, In, IsNull, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Repository } from "typeorm";
 import { Product } from "../models/database/Product.js";
-import { IProductCreateRequest, IProductGetAllRequest, IProductGetAllRequest2 } from "../schemas/IProduct.js";
-
+import { IProductCreateRequest, IProductGetAllRequest, IMyProductGetAllRequest } from "../types/IProduct.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
 
+@injectable()
 export class ProductRepository {
-	constructor(private readonly repository: Repository<Product>) {}
+	constructor(
+		@inject("ProductTypeORMRepository")
+		private readonly repository: Repository<Product>,
+	) {}
 
 	getRepo = (manager?: EntityManager) => {
 		return manager ? manager.getRepository(Product) : this.repository;
 	};
 
-	async getAllMyProducts(query: IProductGetAllRequest): Promise<{ items: Product[]; totalCount: number }> {
+	async getAllMyProducts(query: IMyProductGetAllRequest): Promise<{ items: Product[]; totalCount: number }> {
 		const validOrderColumns = createValidOrderColumns<Product>(["Name", "Price", "Stock", "CreatedAt"]);
 
 		const { skip, take, order } = getAllPaginationOptions<Product>(query, validOrderColumns);
@@ -27,15 +31,13 @@ export class ProductRepository {
 		return { items, totalCount };
 	}
 
-	async getAll(query: IProductGetAllRequest2): Promise<{ items: Product[]; totalCount: number }> {
+	async getAll(query: IProductGetAllRequest): Promise<{ items: Product[]; totalCount: number }> {
 		const validOrderColumns = createValidOrderColumns<Product>(["Name", "Price", "Stock", "CreatedAt"]);
 
 		const { skip, take, order } = getAllPaginationOptions<Product>(query, validOrderColumns);
 
 		// TODO ERROR IN query.categoryIds.map(Number)
 		// TODO ERROR no anda available false
-
-		console.log(query.available);
 
 		// Fiter options
 		const baseConditions = {

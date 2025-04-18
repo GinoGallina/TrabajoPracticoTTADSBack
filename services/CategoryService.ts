@@ -1,16 +1,18 @@
 import { DataSource } from "typeorm";
 import { CategoryRepository } from "../repository/CategoryRepository.js";
-import { ICategoryCreateRequest, ICategoryGetAllResponse, ICategoryResponse } from "../schemas/ICategory.js";
-import { IBaseResponse } from "../schemas/shared/IBaseResponse.js";
+import { ICategoryCreateRequest, ICategoryGetAllResponse, ICategoryResponse } from "../types/ICategory.js";
+import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
+import { IGetCombo } from "../types/shared/IGetCombo.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { inject, injectable } from "tsyringe";
 
-import { IGetCombo } from "../schemas/shared/IGetCombo.js";
-
+@injectable()
 export class CategoryService {
 	constructor(
-		private readonly categoryRepository: CategoryRepository,
-		private readonly db: DataSource,
+		@inject("DataSource") private readonly db: DataSource,
+		@inject("CategoryRepository") private readonly categoryRepository: CategoryRepository,
 	) {}
 
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<ICategoryGetAllResponse | null>> {
@@ -20,9 +22,9 @@ export class CategoryService {
 				message: "",
 				data: {
 					categories: categories.items.map((x) => ({
-						id: x.Id.toString(),
+						id: x.Id!.toString(),
 						name: x.Name,
-						createdAt: x.CreatedAt.toISOString(),
+						createdAt: x.CreatedAt!.toISOString(),
 					})),
 					totalCount: categories?.totalCount || 0,
 				},
@@ -48,9 +50,9 @@ export class CategoryService {
 				});
 
 			return createSuccessResponse("Categoría obtenida correctamente", {
-				id: category.Id.toString(),
+				id: category.Id!.toString(),
 				name: category.Name,
-				createdAt: category.CreatedAt.toISOString(),
+				createdAt: category.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			console.log(e);
@@ -111,9 +113,9 @@ export class CategoryService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Categoría", true), {
-				id: category.Id.toString(),
+				id: category.Id!.toString(),
 				name: category.Name,
-				createdAt: category.CreatedAt.toISOString(),
+				createdAt: category.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -153,9 +155,9 @@ export class CategoryService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-				id: existingCategory.Id.toString(),
+				id: existingCategory.Id!.toString(),
 				name: existingCategory.Name,
-				createdAt: existingCategory.CreatedAt.toISOString(),
+				createdAt: existingCategory.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();

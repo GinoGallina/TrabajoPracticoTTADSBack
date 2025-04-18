@@ -1,17 +1,23 @@
 import { DataSource } from "typeorm";
 import { PaymentTypeRepository } from "../repository/PaymentTypeRepository.js";
-import { IPaymentTypeCreateRequest, IPaymentTypeGetAllResponse, IPaymentTypeResponse } from "../schemas/IPaymentType.js";
-import { IBaseResponse } from "../schemas/shared/IBaseResponse.js";
+import { IPaymentTypeCreateRequest, IPaymentTypeGetAllResponse, IPaymentTypeResponse } from "../types/IPaymentType.js";
+import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
+import { IGetCombo } from "../types/shared/IGetCombo.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { inject, injectable } from "tsyringe";
+import { BaseService } from "./BaseService.js";
+import { PaymentType } from "../models/database/PaymentType.js";
 
-import { IGetCombo } from "../schemas/shared/IGetCombo.js";
-
-export class PaymentTypeService {
+@injectable()
+export class PaymentTypeService extends BaseService<PaymentType> {
 	constructor(
-		private readonly paymentTypeRepository: PaymentTypeRepository,
-		private readonly db: DataSource,
-	) {}
+		@inject("DataSource") private readonly db: DataSource,
+		@inject("PaymentTypeRepository") private readonly paymentTypeRepository: PaymentTypeRepository,
+	) {
+		super(paymentTypeRepository.getRepo());
+	}
 
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IPaymentTypeGetAllResponse | null>> {
 		try {
@@ -20,9 +26,9 @@ export class PaymentTypeService {
 				message: "",
 				data: {
 					paymentTypes: paymentTypes.items.map((x) => ({
-						id: x.Id.toString(),
+						id: x.Id!.toString(),
 						name: x.Name,
-						createdAt: x.CreatedAt.toISOString(),
+						createdAt: x.CreatedAt!.toISOString(),
 					})),
 					totalCount: paymentTypes?.totalCount || 0,
 				},
@@ -48,9 +54,9 @@ export class PaymentTypeService {
 				});
 
 			return createSuccessResponse("Categoría obtenida correctamente", {
-				id: paymentType.Id.toString(),
+				id: paymentType.Id!.toString(),
 				name: paymentType.Name,
-				createdAt: paymentType.CreatedAt.toISOString(),
+				createdAt: paymentType.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			console.log(e);
@@ -111,9 +117,9 @@ export class PaymentTypeService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Categoría", true), {
-				id: paymentType.Id.toString(),
+				id: paymentType.Id!.toString(),
 				name: paymentType.Name,
-				createdAt: paymentType.CreatedAt.toISOString(),
+				createdAt: paymentType.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -153,9 +159,9 @@ export class PaymentTypeService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-				id: existingPaymentType.Id.toString(),
+				id: existingPaymentType.Id!.toString(),
 				name: existingPaymentType.Name,
-				createdAt: existingPaymentType.CreatedAt.toISOString(),
+				createdAt: existingPaymentType.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();

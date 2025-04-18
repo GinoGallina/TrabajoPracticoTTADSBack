@@ -1,33 +1,35 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/UserService.js";
-import { IUserCreateRequest, IUserDeleteRequest, IUserGetComboRequest, IUserGetOneRequest } from "../schemas/IUser.js";
-import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
+import { IUserCreateRequest, IUserDeleteRequest, IUserGetComboRequest, IUserGetOneRequest } from "../types/IUser.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class UserController {
-	constructor(private readonly categoryService: UserService) {}
+	constructor(@inject("UserService") private readonly userService: UserService) {}
 
 	getAll = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
-		const response = await this.categoryService.getAll(req.query);
+		const response = await this.userService.getAll(req.query);
 		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
 	};
 
 	getOne = async (req: Request<object, object, object, IUserGetOneRequest>, res: Response) => {
-		const response = await this.categoryService.getOne(req.query.id);
+		const response = await this.userService.getOne(req.query.id);
 		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
 	};
 
 	getCombo = async (req: Request<IUserGetComboRequest>, res: Response) => {
-		const response = await this.categoryService.getCombo(req.body);
+		const response = await this.userService.getCombo(req.body);
 		res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
 	};
 
 	create = async (req: Request<IUserCreateRequest>, res: Response) => {
-		const response = await this.categoryService.create(req.body);
+		const response = await this.userService.create(req.body);
 		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
 	};
 
 	delete = async (req: Request<IUserDeleteRequest>, res: Response) => {
-		const response = await this.categoryService.delete(req.body.Id);
+		const response = await this.userService.delete(req.body.Id);
 		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
 	};
 }

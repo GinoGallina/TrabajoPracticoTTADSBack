@@ -1,18 +1,11 @@
 import { Router } from "express";
-import { DataSource } from "typeorm";
-import { User } from "../models/database/User.js";
+import { container } from "tsyringe";
 import { UserController } from "../controllers/UserController.js";
-import { UserRepository } from "../repository/UserRepository.js";
-import { UserService } from "../services/UserService.js";
-import { Role } from "../models/database/Role.js";
 
-export const UserRouter = (db: DataSource) => {
+export const UserRouter = () => {
 	const router = Router();
-	const roleRepository = db.getRepository(Role);
-	const userRepository = new UserRepository(db.getRepository(User), roleRepository);
 
-	const userService = new UserService(db, userRepository, roleRepository);
-	const userController = new UserController(userService);
+	const userController = container.resolve(UserController);
 
 	router.get("/getAll", userController.getAll.bind(userController));
 	router.get("/getOne", userController.getOne.bind(userController));

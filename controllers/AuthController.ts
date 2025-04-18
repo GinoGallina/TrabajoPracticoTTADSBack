@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { AuthService } from "../services/AuthService.js";
-import { ILoginRequest, IRegisterRequest } from "../schemas/IAuth.js";
-
+import { ILoginRequest, IRegisterRequest } from "../types/IAuth.js";
+import { inject, injectable } from "tsyringe";
+@injectable()
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(@inject("AuthService") private readonly authService: AuthService) {}
 
 	login = async (req: Request<ILoginRequest>, res: Response) => {
 		const response = await this.authService.login(req.body);

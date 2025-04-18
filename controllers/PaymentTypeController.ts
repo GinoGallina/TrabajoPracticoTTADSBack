@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { PaymentTypeService } from "../services/PaymentTypeService.js";
-import { IPaymentTypeCreateRequest, IPaymentTypeDeleteRequest, IPaymentTypeGetOneRequest } from "../schemas/IPaymentType.js";
-import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
+import { IPaymentTypeCreateRequest, IPaymentTypeDeleteRequest, IPaymentTypeGetOneRequest } from "../types/IPaymentType.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class PaymentTypeController {
-	constructor(private readonly paymentTypeService: PaymentTypeService) {}
+	constructor(@inject("PaymentTypeService") private readonly paymentTypeService: PaymentTypeService) {}
 
 	getAll = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
 		const response = await this.paymentTypeService.getAll(req.query);

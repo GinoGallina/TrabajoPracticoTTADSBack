@@ -1,9 +1,10 @@
 import { EntityManager, IsNull, Repository } from "typeorm";
-import { GetComboItem } from "../schemas/shared/IGetCombo.js";
+import { GetComboItem } from "../types/shared/IGetCombo.js";
 import { Role } from "../models/database/Role.js";
-
+import { inject, injectable } from "tsyringe";
+@injectable()
 export class RoleRepository {
-	constructor(private readonly repository: Repository<Role>) {}
+	constructor(@inject("RoleTypeORMRepository") private readonly repository: Repository<Role>) {}
 
 	getRepo = (manager?: EntityManager) => {
 		return manager ? manager.getRepository(Role) : this.repository;
@@ -30,7 +31,7 @@ export class RoleRepository {
 		});
 
 		return roles.map((r) => ({
-			id: r.Id.toString(),
+			id: r.Id!.toString(),
 			label: r.Name,
 		}));
 	}

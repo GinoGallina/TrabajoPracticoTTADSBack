@@ -1,3 +1,16 @@
+export enum OrderItemEnum {
+	Pending = "Pending",
+	Paid = "Paid",
+	Shipped = "Shipped",
+	Delivered = "Delivered",
+	Cancelled = "Cancelled",
+}
+
+export interface IOrderItemCreateRequest {
+	ProductId: string;
+	Quantity: number;
+}
+
 // import { z } from "zod";
 
 // const orderSchema = z.object({
@@ -35,7 +48,7 @@
 //       message: "Comment cannot be empty or contain only spaces",
 //     })
 //     .optional()
-  
+
 // });
 
 // export function validateOrder(input: unknown) {

@@ -1,12 +1,18 @@
 import { Category } from "../models/database/Category.js";
 import { EntityManager, IsNull, Repository } from "typeorm";
 
-import { ICategoryCreateRequest } from "../schemas/ICategory.js";
-import { GetComboItem } from "../schemas/shared/IGetCombo.js";
+import { ICategoryCreateRequest } from "../types/ICategory.js";
+import { GetComboItem } from "../types/shared/IGetCombo.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class CategoryRepository {
-	constructor(private readonly repository: Repository<Category>) {}
+	constructor(
+		@inject("CategoryTypeORMRepository")
+		private readonly repository: Repository<Category>,
+	) {}
 
 	getRepo = (manager?: EntityManager) => {
 		return manager ? manager.getRepository(Category) : this.repository;
@@ -50,7 +56,7 @@ export class CategoryRepository {
 		});
 
 		return categories.map((c) => ({
-			id: c.Id.toString(),
+			id: c.Id!.toString(),
 			label: c.Name,
 		}));
 	}

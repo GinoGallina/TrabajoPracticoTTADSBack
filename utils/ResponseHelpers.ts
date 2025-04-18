@@ -1,4 +1,4 @@
-import { IBaseResponse, IBaseResponseError } from "../schemas/shared/IBaseResponse.js";
+import { IBaseResponse, IBaseResponseError } from "../types/shared/IBaseResponse.js";
 
 export function createSuccessResponse<T>(message: string, data: T): IBaseResponse<T> {
 	return {

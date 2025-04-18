@@ -6,23 +6,25 @@ import {
 	IUserRegisterResponse,
 	IUserResponse,
 	UserFindByType,
-} from "../schemas/IUser.js";
-import { IBaseResponse } from "../schemas/shared/IBaseResponse.js";
+} from "../types/IUser.js";
+import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import { UserRepository } from "../repository/UserRepository.js";
 import { validateFields } from "../utils/ServiceHelpers.js";
 import { Role } from "../models/database/Role.js";
-import { RoleEnum } from "../schemas/IRole.js";
+import { RoleEnum } from "../types/IRole.js";
 import bcrypt from "bcrypt";
-import { IGenericGetAllRequest } from "../schemas/shared/IBaseRequest.js";
-import { IGetCombo } from "../schemas/shared/IGetCombo.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { IGetCombo } from "../types/shared/IGetCombo.js";
+import { inject, injectable } from "tsyringe";
 
+@injectable()
 export class UserService {
 	constructor(
-		private readonly db: DataSource,
-		private readonly userRepository: UserRepository,
-		private readonly roleRepository: Repository<Role>,
+		@inject("DataSource") private readonly db: DataSource,
+		@inject("UserRepository") private readonly userRepository: UserRepository,
+		@inject("RoleTypeORMRepository") private readonly roleRepository: Repository<Role>,
 	) {}
 
 	findByFields = async (fields: Partial<UserFindByType>, manager?: EntityManager) => {
@@ -130,12 +132,12 @@ export class UserService {
 				message: "",
 				data: {
 					users: users.items.map((x) => ({
-						id: x.Id.toString(),
+						id: x.Id!.toString(),
 						username: x.Username,
 						email: x.Email,
 						address: x.Address,
 						roles: x.Roles?.map((x) => x.Name),
-						createdAt: x.CreatedAt.toISOString(),
+						createdAt: x.CreatedAt!.toISOString(),
 					})),
 					totalCount: users?.totalCount || 0,
 				},
@@ -161,16 +163,16 @@ export class UserService {
 				});
 
 			return createSuccessResponse("Usuario obtenido correctamente", {
-				id: user.Id.toString(),
+				id: user.Id!.toString(),
 				username: user.Username,
 				email: user.Email,
 				address: user.Address,
-				roles: user.Roles.map((x) => x.Id.toString()),
+				roles: user.Roles.map((x) => x.Id!.toString()),
 				storeName: user.StoreName,
 				storeDescription: user.StoreName,
 				cbu: user.Cbu,
 				cuit: user.Cuit,
-				createdAt: user.CreatedAt.toISOString(),
+				createdAt: user.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			console.log(e);
@@ -221,16 +223,16 @@ export class UserService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Usuario"), {
-				id: user.Id.toString(),
+				id: user.Id!.toString(),
 				username: user.Username,
 				email: user.Email,
 				address: user.Address,
-				roles: user.Roles.map((x) => x.Id.toString()),
+				roles: user.Roles.map((x) => x.Id!.toString()),
 				storeName: user.StoreName,
 				storeDescription: user.StoreName,
 				cbu: user.Cbu,
 				cuit: user.Cuit,
-				createdAt: user.CreatedAt.toISOString(),
+				createdAt: user.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -258,7 +260,7 @@ export class UserService {
 			const user = await this.userRepository.create(rq, manager);
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Usuario"), {
-				id: user.Id.toString(),
+				id: user.Id!.toString(),
 				username: user.Username,
 				email: user.Email,
 				roles: user.Roles.map((x) => x.Name),
@@ -298,16 +300,16 @@ export class UserService {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Usuario", true), {
-				id: existingUser.Id.toString(),
+				id: existingUser.Id!.toString(),
 				username: existingUser.Username,
 				email: existingUser.Email,
 				address: existingUser.Address,
-				roles: existingUser.Roles.map((x) => x.Id.toString()),
+				roles: existingUser.Roles.map((x) => x.Id!.toString()),
 				storeName: existingUser.StoreName,
 				storeDescription: existingUser.StoreName,
 				cbu: existingUser.Cbu,
 				cuit: existingUser.Cuit,
-				createdAt: existingUser.CreatedAt.toISOString(),
+				createdAt: existingUser.CreatedAt!.toISOString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();

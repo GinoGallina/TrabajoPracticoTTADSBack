@@ -5,6 +5,8 @@ import { Product } from "../models/database/Product.js";
 import { User } from "../models/database/User.js";
 import { Role } from "../models/database/Role.js";
 import { PaymentType } from "../models/database/PaymentType.js";
+import { Order } from "../models/database/Order.js";
+import { OrderItem } from "../models/database/OrderItem.js";
 
 let db = new DataSource({
 	type: "postgres",
@@ -44,7 +46,7 @@ async function createDatabaseIfNotExists() {
 			username: process.env.DB_USER,
 			password: process.env.DB_PASS,
 			database: process.env.DB_NAME,
-			entities: [Category, Product, User, Role, PaymentType],
+			entities: [Category, Product, User, Role, PaymentType, Order, OrderItem],
 			synchronize: true,
 			logging: false,
 		});

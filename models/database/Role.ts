@@ -1,6 +1,6 @@
 import { Entity, Column } from "typeorm";
 import { BaseModel } from "./BaseModel.js";
-import { RoleEnum } from "../../schemas/IRole.js";
+import { RoleEnum } from "../../types/IRole.js";
 
 @Entity("Role")
 export class Role extends BaseModel {

@@ -13,6 +13,10 @@ import createRoutes from "./routes/index.js";
 import { seedDatabase } from "./utils/SeederHelper.js";
 import { authenticateJWT } from "./middleware/Jwt/Authenticate.js";
 
+// Inyectables
+import { registerInyectables } from "./config/inyectabes.js";
+import { ContextService } from "./services/ContextService.js";
+
 // Check required environment variables
 const requiredEnvVars = ["PORT", "DB_HOST", "DB_PORT", "DB_USER", "DB_PASS", "DB_NAME"];
 requiredEnvVars.forEach((varName) => {
@@ -45,18 +49,16 @@ async function startServer() {
 
 		await seedDatabase(db);
 
-		// JWT
-		app.use(
-			authenticateJWT.unless({
-				path: [
-					{ url: "/api/auth/login", methods: ["POST"] },
-					{ url: "/api/auth/register", methods: ["POST"] },
-					{ url: "/api/role/getCombo", methods: ["GET"] },
-				],
-			}),
-		);
+		registerInyectables();
 
-		app.use("/api", createRoutes(db));
+		// JWT
+		app.use((req, _, next) => {
+			ContextService.run(req, () => {
+				next();
+			});
+		}, authenticateJWT);
+
+		app.use("/api", createRoutes());
 
 		app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 	} catch (error) {
