@@ -28,9 +28,6 @@ export interface IProductGetAllResponse extends IGenericGetAllResponse {
 }
 
 // Get One
-export interface IProductGetOneRequest {
-	id: string;
-}
 export interface IProductGetOneResponse {
 	id: number;
 	name: string;
@@ -63,11 +60,6 @@ export interface IProductCreateRequest {
 	Image?: string;
 	CategoryId: string;
 	UserId: string;
-}
-
-// Delete
-export interface IProductDeleteRequest {
-	id: string;
 }
 
 // import { z } from "zod";

@@ -1,32 +1,22 @@
-import { Request, Response } from "express";
-import { ICategoryCreateRequest, ICategoryDeleteRequest, ICategoryGetOneRequest } from "../types/ICategory.js";
-import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { OrderService } from "../services/OrderService.js";
 import { inject, injectable } from "tsyringe";
+import { BaseController } from "./BaseController.js";
+import { IOrderCreateRequest, IOrderGetAllResponse, IOrderResponse } from "../types/IOrder.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 
 @injectable()
-export class OrderController {
-	constructor(@inject("OrderService") private readonly orderService: OrderService) {}
-
-	// getAll = async (req: Request<object, object, object, IGenericGetAllRequest>, res: Response) => {
-	// 	const response = await this.orderService.getAll(req.query);
-	// 	res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
-	// };
-
-	// getOne = async (req: Request<object, object, object, ICategoryGetOneRequest>, res: Response) => {
-	// 	const response = await this.orderService.getOne(req.query.id);
-	// 	res.status(response.success ? 200 : (response.error?.code ?? 500)).json(response);
-	// };
-
-	create = async (req: Request<ICategoryCreateRequest>, res: Response) => {
-		const response = await this.orderService.create(req.body);
-		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
-	};
-
-	// delete = async (req: Request<ICategoryDeleteRequest>, res: Response) => {
-	// 	const response = await this.orderService.delete(req.body.Id);
-	// 	res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
-	// };
+export class OrderController extends BaseController<
+	OrderService,
+	IGenericGetAllRequest,
+	IOrderGetAllResponse,
+	unknown,
+	IOrderCreateRequest,
+	IOrderResponse,
+	IOrderResponse
+> {
+	constructor(@inject("OrderService") orderService: OrderService) {
+		super(orderService);
+	}
 }
 
 // import { Request, Response } from "express";

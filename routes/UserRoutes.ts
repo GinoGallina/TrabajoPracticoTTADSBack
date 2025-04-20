@@ -8,10 +8,10 @@ export const UserRouter = () => {
 	const userController = container.resolve(UserController);
 
 	router.get("/getAll", userController.getAll.bind(userController));
-	router.get("/getOne", userController.getOne.bind(userController));
+	router.get("/getOne/:id", userController.getOne.bind(userController));
 	router.post("/create", userController.create.bind(userController));
 	router.post("/getCombo", userController.getCombo.bind(userController));
-	router.post("/delete", userController.delete.bind(userController));
+	router.post("/delete/:id", userController.delete.bind(userController));
 
 	return router;
 };

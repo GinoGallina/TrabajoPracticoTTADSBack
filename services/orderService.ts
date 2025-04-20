@@ -3,13 +3,14 @@ import { OrderRepository } from "../repository/OrderRepository.js";
 import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
-import { IOrderCreateRequest, IOrderResponse, OrderEnum } from "../types/IOrder.js";
+import { IOrderCreateRequest, IOrderGetAllResponse, IOrderResponse, OrderEnum } from "../types/IOrder.js";
 import { PaymentTypeService } from "./PaymentTypeService.js";
 import { ProductService } from "./ProductService.js";
 import { inject, injectable } from "tsyringe";
 import { Order } from "../models/database/Order.js";
 import { OrderItemEnum } from "../types/IOrderItem.js";
 import { AuthService } from "./AuthService.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 
 @injectable()
 export class OrderService {
@@ -21,30 +22,37 @@ export class OrderService {
 		@inject("AuthService") private readonly authService: AuthService,
 	) {}
 
-	// async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<ICategoryGetAllResponse | null>> {
-	// 	try {
-	// 		const categories = await this.orderRepository.getAll(query);
-	// 		return {
-	// 			message: "",
-	// 			data: {
-	// 				categories: categories.items.map((x) => ({
-	// 					id: x.Id!.toString(),
-	// 					name: x.Name,
-	// 					createdAt: x.CreatedAt!.toISOString(),
-	// 				})),
-	// 				totalCount: categories?.totalCount || 0,
-	// 			},
-	// 			error: null,
-	// 			success: true,
-	// 		};
-	// 	} catch (e) {
-	// 		console.log(e);
-	// 		return createErrorResponse("Error obteniendo categorías", {
-	// 			code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-	// 			message: "",
-	// 		});
-	// 	}
-	// }
+	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IOrderGetAllResponse | null>> {
+		try {
+			const categories = await this.orderRepository.getAll(query);
+			return {
+				message: "",
+				data: {
+					orders: categories.items.map((x) => ({
+						id: x.Id!.toString(),
+						status: x.Status,
+						paymentType: x.PaymentType?.Name || "",
+						user: x.User?.Username || "",
+						totalAmount: x.TotalPrice,
+						items: x.OrderItems.map((y) => ({
+							quantity: y.Quantity,
+							product: y.Product?.Name || "",
+						})),
+						createdAt: x.CreatedAt!.toISOString(),
+					})),
+					totalCount: categories?.totalCount || 0,
+				},
+				error: null,
+				success: true,
+			};
+		} catch (e) {
+			console.log(e);
+			return createErrorResponse("Error obteniendo las ordenes", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		}
+	}
 
 	// async getOne(id: string): Promise<IBaseResponse<ICategoryResponse | null>> {
 	// 	try {

@@ -5,10 +5,7 @@ export interface IPaymentTypeGetAllResponse extends IGenericGetAllResponse {
 	paymentTypes: { id: string; name: string; createdAt: string }[];
 }
 
-// Get one and responses
-export interface IPaymentTypeGetOneRequest {
-	id: string;
-}
+// Responses
 export interface IPaymentTypeResponse {
 	id: string;
 	name: string;
@@ -18,11 +15,6 @@ export interface IPaymentTypeResponse {
 // Create
 export interface IPaymentTypeCreateRequest {
 	Name: string;
-}
-
-// Delete
-export interface IPaymentTypeDeleteRequest {
-	Id: string;
 }
 
 // import { z } from "zod";

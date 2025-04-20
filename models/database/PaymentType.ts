@@ -1,10 +1,14 @@
-import { Entity, Column } from "typeorm";
+import { Entity, Column, OneToMany } from "typeorm";
 import { BaseModel } from "./BaseModel.js";
+import { Order } from "./Order.js";
 
 @Entity("PaymentType")
 export class PaymentType extends BaseModel {
 	@Column({ type: "varchar", unique: true })
 	Name!: string;
+
+	@OneToMany(() => Order, (order) => order.PaymentType)
+	Orders!: Order[];
 }
 
 // import mongoose, { Document, Schema, Model } from "mongoose";

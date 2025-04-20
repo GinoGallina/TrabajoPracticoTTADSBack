@@ -7,10 +7,7 @@ export interface IUserGetAllResponse extends IGenericGetAllResponse {
 	users: { id: string; email: string; username: string; address: string; roles: string[]; createdAt: string }[];
 }
 
-// Get one and responses
-export interface IUserGetOneRequest {
-	id: string;
-}
+// Responses
 export interface IUserResponse {
 	id: string;
 	username: string;
@@ -48,11 +45,6 @@ export interface IUserRegisterResponse {
 	username: string;
 	email: string;
 	roles: RoleEnum[];
-}
-
-// Delete
-export interface IUserDeleteRequest {
-	Id: string;
 }
 
 // Find By Fields

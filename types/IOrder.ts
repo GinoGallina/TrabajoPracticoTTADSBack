@@ -12,13 +12,10 @@ export enum OrderEnum {
 
 // Get All
 export interface IOrderGetAllResponse extends IGenericGetAllResponse {
-	categories: { id: string; name: string; createdAt: string }[];
+	orders: { id: string; paymentType: string; user?: string; createdAt: string; items: { product: string; quantity: number }[] }[];
 }
 
-// Get one and responses
-export interface IOrderGetOneRequest {
-	id: string;
-}
+// Responses
 export interface IOrderResponse {
 	id: string;
 	createdAt: string;
@@ -28,11 +25,6 @@ export interface IOrderResponse {
 export interface IOrderCreateRequest {
 	PaymentTypeId: string;
 	Items: IOrderItemCreateRequest[];
-}
-
-// Delete
-export interface IOrderDeleteRequest {
-	Id: string;
 }
 
 // import { z } from "zod";

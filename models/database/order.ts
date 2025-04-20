@@ -26,10 +26,11 @@ export class Order extends BaseModel {
 	@Column({ type: "int" })
 	UserId!: number;
 
-	@ManyToOne(() => User, (user) => user.Products)
+	@ManyToOne(() => User, (user) => user.Orders)
 	@JoinColumn({ name: "UserId" })
 	User?: User;
 
+	@ManyToOne(() => PaymentType, (paymentType) => paymentType.Orders)
 	@JoinColumn({ name: "PaymentTypeId" })
 	PaymentType?: PaymentType;
 

@@ -22,8 +22,8 @@ export class OrderRepository {
 
 		const [items, totalCount] = await this.repository.findAndCount({
 			where: { DeletedAt: IsNull() },
-			relations: ["PaymentType"],
-			select: { Id: true, TotalPrice: true, CreatedAt: true },
+			relations: ["PaymentType", "User", "OrderItems"],
+			select: { Id: true, Status: true, TotalPrice: true, CreatedAt: true },
 			order,
 			skip,
 			take,

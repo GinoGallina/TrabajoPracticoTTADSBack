@@ -8,10 +8,10 @@ export const PaymentTypeRouter = () => {
 	const paymentTypeController = container.resolve(PaymentTypeController);
 
 	router.get("/getAll", paymentTypeController.getAll.bind(paymentTypeController));
-	router.get("/getOne", paymentTypeController.getOne.bind(paymentTypeController));
+	router.get("/getOne/:id", paymentTypeController.getOne.bind(paymentTypeController));
 	router.get("/getCombo", paymentTypeController.getCombo.bind(paymentTypeController));
 	router.post("/create", paymentTypeController.create.bind(paymentTypeController));
-	router.post("/delete", paymentTypeController.delete.bind(paymentTypeController));
+	router.post("/delete/:id", paymentTypeController.delete.bind(paymentTypeController));
 
 	return router;
 };

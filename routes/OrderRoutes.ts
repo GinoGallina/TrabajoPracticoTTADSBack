@@ -7,10 +7,10 @@ export const OrderRouter = () => {
 
 	const orderController = container.resolve(OrderController);
 
-	// router.get("/getAll", orderController.getAll.bind(orderController));
-	// router.get("/getOne", orderController.getOne.bind(orderController));
+	router.get("/getAll", orderController.getAll.bind(orderController));
+	// router.get("/getOne/:id", orderController.getOne.bind(orderController));
 	router.post("/create", orderController.create.bind(orderController));
-	// router.post("/delete", orderController.delete.bind(orderController));
+	// router.post("/delete/:id", orderController.delete.bind(orderController));
 
 	return router;
 };

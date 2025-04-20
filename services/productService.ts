@@ -9,6 +9,7 @@ import {
 	IMyProductGetAllRequest,
 	IProductGetAllResponse,
 	IProductResponse,
+	IProductGetOneResponse,
 } from "../types/IProduct.js";
 import { validateFields } from "../utils/ServiceHelpers.js";
 import { CategoryService } from "./CategoryService.js";
@@ -145,7 +146,7 @@ export class ProductService extends BaseService<Product> {
 		}
 	}
 
-	async getOne(id: string): Promise<IBaseResponse<IProductResponse | null>> {
+	async getOne(id: string): Promise<IBaseResponse<IProductGetOneResponse | null>> {
 		try {
 			const product = await this.productRepository.getById(id);
 			if (!product)

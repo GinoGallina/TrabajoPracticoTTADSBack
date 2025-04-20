@@ -2,6 +2,7 @@ import { Entity, Column, OneToMany, ManyToMany, JoinTable } from "typeorm";
 import { BaseModel } from "./BaseModel.js";
 import { Product } from "./Product.js";
 import { Role } from "./Role.js";
+import { Order } from "./Order.js";
 
 @Entity("User")
 export class User extends BaseModel {
@@ -32,6 +33,9 @@ export class User extends BaseModel {
 
 	@OneToMany(() => Product, (product) => product.Category)
 	Products!: Product[];
+
+	@OneToMany(() => Order, (order) => order.User)
+	Orders!: Order[];
 
 	@ManyToMany(() => Role, { eager: true })
 	@JoinTable({

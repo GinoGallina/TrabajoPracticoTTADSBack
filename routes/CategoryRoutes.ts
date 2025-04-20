@@ -8,10 +8,10 @@ export const CategoryRouter = () => {
 	const categoryController = container.resolve(CategoryController);
 
 	router.get("/getAll", categoryController.getAll.bind(categoryController));
-	router.get("/getOne", categoryController.getOne.bind(categoryController));
+	router.get("/getOne/:id", categoryController.getOne.bind(categoryController));
 	router.get("/getCombo", categoryController.getCombo.bind(categoryController));
 	router.post("/create", categoryController.create.bind(categoryController));
-	router.post("/delete", categoryController.delete.bind(categoryController));
+	router.post("/delete/:id", categoryController.delete.bind(categoryController));
 
 	return router;
 };
