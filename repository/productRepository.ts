@@ -39,11 +39,14 @@ export class ProductRepository {
 		// TODO ERROR IN query.categoryIds.map(Number)
 		// TODO ERROR no anda available false
 
+		const categoryIds = Array.isArray(query.categoryIds) ? query.categoryIds.map(Number) : [Number(query.categoryIds)];
+
 		// Fiter options
 		const baseConditions = {
 			DeletedAt: IsNull(),
-			...(query.categoryIds && query.categoryIds.length > 0 && { Category: { Id: In(query.categoryIds.map(Number)) } }),
-			Stock: query.available ? MoreThan(0) : MoreThanOrEqual(0),
+			...(query.categoryIds && query.categoryIds.length > 0 && { Category: { Id: In(categoryIds) } }),
+			...(query.available === true && { Stock: MoreThan(0) }),
+			...(query.available === false && { Stock: MoreThanOrEqual(0) }),
 			...(query.price && {
 				Price: query.lessThan === true ? LessThanOrEqual(Number(query.price)) : MoreThanOrEqual(Number(query.price)),
 			}),

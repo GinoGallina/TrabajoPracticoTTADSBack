@@ -3,7 +3,7 @@ import { OrderRepository } from "../repository/OrderRepository.js";
 import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
-import { IOrderCreateRequest, IOrderGetAllResponse, IOrderResponse, OrderEnum } from "../types/IOrder.js";
+import { IOrderCreateRequest, IOrderGetAllResponse, IOrderGetOneResponse, IOrderResponse, OrderEnum } from "../types/IOrder.js";
 import { PaymentTypeService } from "./PaymentTypeService.js";
 import { ProductService } from "./ProductService.js";
 import { inject, injectable } from "tsyringe";
@@ -11,6 +11,7 @@ import { Order } from "../models/database/Order.js";
 import { OrderItemEnum } from "../types/IOrderItem.js";
 import { AuthService } from "./AuthService.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { RoleEnum } from "../types/IRole.js";
 
 @injectable()
 export class OrderService {
@@ -33,6 +34,7 @@ export class OrderService {
 						status: x.Status,
 						paymentType: x.PaymentType?.Name || "",
 						user: x.User?.Username || "",
+						shippingAddress: x.ShippingAddress,
 						totalAmount: x.TotalPrice,
 						items: x.OrderItems.map((y) => ({
 							quantity: y.Quantity,
@@ -54,28 +56,36 @@ export class OrderService {
 		}
 	}
 
-	// async getOne(id: string): Promise<IBaseResponse<ICategoryResponse | null>> {
-	// 	try {
-	// 		const order = await this.orderRepository.getById(id);
-	// 		if (!order)
-	// 			return createErrorResponse("Categoría no encontrada", {
-	// 				code: 404,
-	// 				message: Messages.Error.EntityNotFound("Categoría", true),
-	// 			});
+	async getOne(id: string): Promise<IBaseResponse<IOrderGetOneResponse | null>> {
+		try {
+			const order = await this.orderRepository.getById(id);
+			if (!order)
+				return createErrorResponse("Orden no encontrada", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Orden", true),
+				});
 
-	// 		return createSuccessResponse("Categoría obtenida correctamente", {
-	// 			id: order.Id!.toString(),
-	// 			name: order.Name,
-	// 			createdAt: order.CreatedAt!.toISOString(),
-	// 		});
-	// 	} catch (e) {
-	// 		console.log(e);
-	// 		return createErrorResponse("Error creando categoría", {
-	// 			code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-	// 			message: "",
-	// 		});
-	// 	}
-	// }
+			return createSuccessResponse("Orden obtenida correctamente", {
+				shippingAddress: order.ShippingAddress,
+				paymentType: order.PaymentType?.Name || "",
+				status: order.Status,
+				total: order.TotalPrice,
+				user: this.authService.getToken().roles.includes(RoleEnum.Admin) ? order.User?.Username : "",
+				items: order.OrderItems.map((x) => ({
+					product: x.Product?.Name || "",
+					quantity: x.Quantity,
+					status: x.Status,
+					price: x.SettedPrice,
+				})),
+			});
+		} catch (e) {
+			console.log(e);
+			return createErrorResponse("Error obteniendo orden", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		}
+	}
 
 	async create(rq: IOrderCreateRequest): Promise<IBaseResponse<IOrderResponse | null>> {
 		// Crear queryRunner
@@ -124,16 +134,19 @@ export class OrderService {
 				return acc + product!.Price! * item.Quantity;
 			}, 0);
 
+			const token = this.authService.getToken();
+
 			const orderToCreate = new Order({
 				PaymentTypeId: Number(rq.PaymentTypeId),
-				UserId: Number(this.authService.getToken().id),
+				UserId: Number(token.id),
 				Status: OrderEnum.Pending,
 				TotalPrice: totalPrice,
-				ShippingAddress: "Brown",
+				ShippingAddress: rq.Address || token.address,
 				OrderItems: rq.Items.map((x) => ({
 					Quantity: x.Quantity,
 					ProductId: Number(x.ProductId),
 					Status: OrderItemEnum.Pending,
+					SettedPrice: products.find((y) => y.Id === Number(x.ProductId))?.Price || 0,
 				})),
 			});
 

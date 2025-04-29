@@ -44,6 +44,7 @@ export interface IUserRegisterResponse {
 	id: string;
 	username: string;
 	email: string;
+	address: string;
 	roles: RoleEnum[];
 }
 

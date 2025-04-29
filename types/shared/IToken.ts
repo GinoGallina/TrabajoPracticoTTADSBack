@@ -8,6 +8,7 @@ export interface IUserToken {
 	roles: RoleEnum[];
 	username: string;
 	email: string;
+	address: string;
 }
 
 export interface AuthenticatedRequest extends Request {

@@ -10,6 +10,7 @@ import {
 	IProductGetAllResponse,
 	IProductResponse,
 	IProductGetOneResponse,
+	IProductGetDetailsResponse,
 } from "../types/IProduct.js";
 import { validateFields } from "../utils/ServiceHelpers.js";
 import { CategoryService } from "./CategoryService.js";
@@ -164,6 +165,34 @@ export class ProductService extends BaseService<Product> {
 				image: product.Image,
 				categoryId: product.Category.Id!.toString(),
 				userId: product.User.Id!.toString(),
+				createdAt: product.CreatedAt!.toISOString(),
+			});
+		} catch (e) {
+			console.log(e);
+			return createErrorResponse("Error obteniendo producto", {
+				code: e instanceof Error ? 500 : 500,
+				message: "",
+			});
+		}
+	}
+
+	async getDetails(id: string): Promise<IBaseResponse<IProductGetDetailsResponse | null>> {
+		try {
+			const product = await this.productRepository.getById(id);
+			if (!product)
+				return createErrorResponse("Producto no encontrado", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Producto"),
+				});
+
+			return createSuccessResponse("Producto obtenido correctamente", {
+				name: product.Name,
+				description: product.Description,
+				price: product.Price,
+				stock: product.Stock,
+				image: product.Image,
+				categoryName: product.Category.Name,
+				userName: product.User.Username,
 				createdAt: product.CreatedAt!.toISOString(),
 			});
 		} catch (e) {

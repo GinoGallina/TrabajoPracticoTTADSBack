@@ -1,18 +1,31 @@
-import { IOrderItemCreateRequest } from "./IOrderItem.js";
+import { IOrderItemCreateRequest, OrderItemEnum } from "./IOrderItem.js";
 import { IGenericGetAllResponse } from "./shared/IBaseResponse.js";
 
 // Order status
 export enum OrderEnum {
 	Pending = "Pending",
-	Paid = "Paid",
-	Shipped = "Shipped",
-	Delivered = "Delivered",
-	Cancelled = "Cancelled",
+	Completed = "Completed",
 }
 
 // Get All
 export interface IOrderGetAllResponse extends IGenericGetAllResponse {
-	orders: { id: string; paymentType: string; user?: string; createdAt: string; items: { product: string; quantity: number }[] }[];
+	orders: {
+		id: string;
+		paymentType: string;
+		user?: string;
+		shippingAddress: string;
+		createdAt: string;
+		items: { product: string; quantity: number }[];
+	}[];
+}
+
+// Get One
+export interface IOrderGetOneResponse {
+	paymentType: string;
+	user?: string;
+	shippingAddress: string;
+	total: number;
+	items: { product: string; quantity: number; status: OrderItemEnum; imagen?: string; price: number }[];
 }
 
 // Responses
@@ -25,6 +38,7 @@ export interface IOrderResponse {
 export interface IOrderCreateRequest {
 	PaymentTypeId: string;
 	Items: IOrderItemCreateRequest[];
+	Address: string;
 }
 
 // import { z } from "zod";

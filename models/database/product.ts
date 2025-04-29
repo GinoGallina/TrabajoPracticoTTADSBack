@@ -1,7 +1,8 @@
-import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from "typeorm";
 import { BaseModel } from "./BaseModel.js";
 import { Category } from "./Category.js";
 import { User } from "./User.js";
+import { OrderItem } from "./OrderItem.js";
 
 @Entity("Product")
 export class Product extends BaseModel {
@@ -33,6 +34,9 @@ export class Product extends BaseModel {
 	@ManyToOne(() => Category, (category) => category.Products)
 	@JoinColumn({ name: "CategoryId" })
 	Category!: Category;
+
+	@OneToMany(() => OrderItem, (item) => item.Product)
+	OrderItems!: OrderItem[];
 }
 
 // import mongoose, { Schema, Document, Model } from "mongoose";

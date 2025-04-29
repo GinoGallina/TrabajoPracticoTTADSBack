@@ -1,14 +1,18 @@
-import { EntityManager, IsNull, Repository } from "typeorm";
+import { EntityManager, FindOptionsWhere, IsNull, Repository } from "typeorm";
 import { Order } from "../models/database/Order.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { inject, injectable } from "tsyringe";
+import { AuthService } from "../services/AuthService.js";
+import { RoleEnum } from "../types/IRole.js";
 
 @injectable()
 export class OrderRepository {
 	constructor(
 		@inject("OrderTypeORMRepository")
 		private readonly repository: Repository<Order>,
+		@inject("AuthService")
+		private readonly authService: AuthService,
 	) {}
 
 	getRepo = (manager?: EntityManager) => {
@@ -20,10 +24,19 @@ export class OrderRepository {
 
 		const { skip, take, order } = getAllPaginationOptions<Order>(query, validOrderColumns);
 
+		const token = this.authService.getToken();
+
+		const whereCondition: FindOptionsWhere<Order> = {
+			DeletedAt: IsNull(),
+		};
+
+		if (!token.roles.includes(RoleEnum.Admin)) {
+			whereCondition.UserId = Number(token.id);
+		}
 		const [items, totalCount] = await this.repository.findAndCount({
-			where: { DeletedAt: IsNull() },
+			where: whereCondition,
 			relations: ["PaymentType", "User", "OrderItems"],
-			select: { Id: true, Status: true, TotalPrice: true, CreatedAt: true },
+			select: { Id: true, Status: true, ShippingAddress: true, TotalPrice: true, CreatedAt: true },
 			order,
 			skip,
 			take,
@@ -33,17 +46,19 @@ export class OrderRepository {
 	}
 
 	async getById(id: string): Promise<Order | null> {
-		const categoryId = Number(id);
+		const orderId = Number(id);
 
-		if (isNaN(categoryId)) return null;
+		if (isNaN(orderId)) return null;
 
-		const category = await this.repository.findOne({
-			where: { Id: categoryId, DeletedAt: IsNull() },
+		const order = await this.repository.findOne({
+			where: { Id: orderId, DeletedAt: IsNull() },
+			relations: ["PaymentType", "User", "OrderItems", "OrderItems.Product"],
+			select: { Id: true, Status: true, ShippingAddress: true, TotalPrice: true, CreatedAt: true },
 		});
 
-		if (!category) return null;
+		if (!order) return null;
 
-		return category;
+		return order;
 	}
 
 	async create(order: Order, manager?: EntityManager): Promise<Order> {
@@ -52,17 +67,17 @@ export class OrderRepository {
 	}
 
 	// async update(id: string, data: Partial<Order>): Promise<Order | null> {
-	// 	const category = await this.getById(id);
-	// 	if (!category) return null;
+	// 	const order = await this.getById(id);
+	// 	if (!order) return null;
 
-	// 	Object.assign(category, data);
-	// 	return await this.repository.save(category);
+	// 	Object.assign(order, data);
+	// 	return await this.repository.save(order);
 	// }
 
 	async delete(id: string, manager?: EntityManager): Promise<boolean | null> {
-		const categoryId = Number(id);
+		const orderId = Number(id);
 
-		if (isNaN(categoryId)) return null;
+		if (isNaN(orderId)) return null;
 
 		const repo = this.getRepo(manager);
 		const result = await repo.softDelete(id);

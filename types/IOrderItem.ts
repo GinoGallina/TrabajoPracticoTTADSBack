@@ -3,7 +3,6 @@ export enum OrderItemEnum {
 	Paid = "Paid",
 	Shipped = "Shipped",
 	Delivered = "Delivered",
-	Cancelled = "Cancelled",
 }
 
 export interface IOrderItemCreateRequest {

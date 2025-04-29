@@ -55,13 +55,8 @@ export class UserService {
 			},
 		];
 
-		// Iterate over validation rules and check conditions
-		const hasError = await validateFields(validationRules, queryRunner, "el usuario");
-
-		if (hasError !== null) return hasError;
-
 		// Validate Email
-		const regex = /^[^\s@]+@[^\s@]+\[^\s@]+$/;
+		const regex = /^[^\s@]+@[^\s@]+(\.[^\s@]+)?$/;
 		if (!regex.test(rq.Email)) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
@@ -105,8 +100,35 @@ export class UserService {
 			});
 		}
 
-		// Not duplicated email
+		// Check required roles for Seller
+		if (foundRoles.map((x) => x.Name).includes(RoleEnum.Seller))
+			validationRules.push(
+				...[
+					{
+						condition: !rq.StoreName,
+						field: "nombre de su negocio",
+						errorMessage: Messages.Error.FieldRequired("nombre  de su negocio"),
+					},
+					{
+						condition: !rq.StoreDescription,
+						field: "descripción  de su negocio",
+						errorMessage: Messages.Error.FieldRequired("descripción  de su negocio"),
+					},
+					{
+						condition: !rq.Cbu,
+						field: "cbu",
+						errorMessage: Messages.Error.FieldRequired("cbu"),
+					},
+					// {
+					// 	condition: !rq.Cuit,
+					// 	field: "cuit",
+					// 	errorMessage: Messages.Error.FieldRequired("cuit"),
+					// },
+				],
+			);
+
 		if ((await this.findByFields({ Email: rq.Email }, manager)) != null) {
+			// Not duplicated email
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
 				code: 400,
@@ -122,6 +144,12 @@ export class UserService {
 				message: Messages.Error.UniqueField("nombre de usuario"),
 			});
 		}
+
+		// Iterate over validation rules and check conditions
+		const hasError = await validateFields(validationRules, queryRunner, "el usuario");
+
+		if (hasError !== null) return hasError;
+
 		return null;
 	};
 
@@ -264,6 +292,7 @@ export class UserService {
 				username: user.Username,
 				email: user.Email,
 				roles: user.Roles.map((x) => x.Name),
+				address: user.Address,
 			});
 		} catch (e) {
 			console.log(e);
@@ -323,68 +352,3 @@ export class UserService {
 		}
 	}
 }
-
-// import { UserRepository } from "../repository/userRepository.js";
-
-// const userRepository = new UserRepository();
-// const productRepository = new ProductRepository();
-
-// type ServiceResult<T> = {
-// 	success: boolean;
-// 	data?: T;
-// 	message?: string;
-// };
-
-// export const ProductService = {
-// 	create: async (
-// 		params: IProduct,
-// 	): Promise<ServiceResult<IProduct | void>> => {
-// 		/* create a product
-// 		 * @param {seller_id} - seller that owns the product
-// 		 * @param {name} name - name of the product
-// 		 * @param {description}
-// 		 * @param {price}
-// 		 * @param {stock}
-// 		 * @param {img}
-// 		 */
-// 		const result = await validateSeller(params.seller);
-// 		if (result instanceof Error) {
-// 			return {
-// 				success: false,
-// 				message: result.message,
-// 			};
-// 		}
-// 		try {
-// 			const addedProduct = await productRepository.add(params);
-// 			return {
-// 				success: true,
-// 				data: addedProduct,
-// 			};
-// 		} catch (error) {
-// 			return {
-// 				success: false,
-// 				message: "Failed to add product",
-// 			};
-// 		}
-// 	},
-// };
-
-// const validateSeller = async (id: string): Promise<boolean | Error> => {
-// 	try {
-// 		const user: ISeller = (await userRepository.findOne({ id })) as ISeller;
-// 		if (!user) {
-// 			return new Error("Seller not found");
-// 		}
-// 		if (user.type !== "Seller") {
-// 			return new Error("Seller invalid type");
-// 		}
-// 		if (user.state !== "Active") {
-// 			return new Error("Seller invalid status");
-// 		}
-// 		return true;
-// 	} catch (error) {
-// 		console.log(error);
-
-// 		throw new Error("An error occurred");
-// 	}
-// };

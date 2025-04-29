@@ -20,11 +20,11 @@ export class AuthService {
 		@inject("RoleTypeORMRepository") private readonly roleRepository: Repository<Role>,
 	) {}
 
-	buildToken(id: number, roles: string[]) {
+	buildToken(id: number, roles: string[], address: string, email: string, username: string) {
 		const expiresInSeconds = 24 * 60 * 60;
 		const expirationDate = new Date(Date.now() + expiresInSeconds * 1000);
 
-		const token = jwt.sign({ id, roles }, process.env.JWT_SECRET!, {
+		const token = jwt.sign({ id, roles, address, email, username }, process.env.JWT_SECRET!, {
 			expiresIn: expiresInSeconds,
 		});
 
@@ -77,7 +77,13 @@ export class AuthService {
 
 			await queryRunner.commitTransaction();
 
-			const { token, expirationDate } = this.buildToken(Number(user.data.id), user.data.roles);
+			const { token, expirationDate } = this.buildToken(
+				Number(user.data.id),
+				user.data.roles,
+				user.data.address,
+				user.data.email,
+				user.data.username,
+			);
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Usuario", true), {
 				user: {
@@ -85,6 +91,7 @@ export class AuthService {
 					roles: user.data.roles,
 					username: user.data.username,
 					email: user.data.email,
+					address: user.data.address,
 				},
 				sessionExpiration: expirationDate.toISOString(),
 				token,
@@ -122,6 +129,9 @@ export class AuthService {
 			const { token, expirationDate } = this.buildToken(
 				user.Id!,
 				user.Roles.map((x) => x.Name),
+				user.Address,
+				user.Email,
+				user.Username,
 			);
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Usuario", true), {
@@ -130,6 +140,7 @@ export class AuthService {
 					roles: user.Roles.map((x) => x.Name),
 					username: user.Username,
 					email: user.Email,
+					address: user.Address,
 				},
 				sessionExpiration: expirationDate.toISOString(),
 				token,

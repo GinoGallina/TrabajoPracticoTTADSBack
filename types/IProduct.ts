@@ -27,6 +27,18 @@ export interface IProductGetAllResponse extends IGenericGetAllResponse {
 	}[];
 }
 
+// Get Details
+export interface IProductGetDetailsResponse {
+	name: string;
+	description: string;
+	price: number;
+	stock: number;
+	image?: string;
+	categoryName: string;
+	userName: string;
+	createdAt: string;
+}
+
 // Get One
 export interface IProductGetOneResponse {
 	id: number;

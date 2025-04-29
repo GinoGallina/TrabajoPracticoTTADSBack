@@ -21,13 +21,13 @@ export class UserRepository {
 	};
 
 	async getAll(query: IGenericGetAllRequest): Promise<{ items: User[]; totalCount: number }> {
-		const validOrderColumns = createValidOrderColumns<User>(["Username", "Email", "CreatedAt"]);
+		const validOrderColumns = createValidOrderColumns<User>(["Username", "Email", "Address", "CreatedAt"]);
 
 		const { skip, take, order } = getAllPaginationOptions<User>(query, validOrderColumns);
 
 		const [items, totalCount] = await this.repository.findAndCount({
 			where: { DeletedAt: IsNull() },
-			select: { Id: true, Email: true, Username: true, CreatedAt: true },
+			select: { Id: true, Email: true, Address: true, Username: true, CreatedAt: true },
 			order,
 			skip,
 			take,
