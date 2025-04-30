@@ -1,8 +1,7 @@
 import { EntityManager, In, IsNull, Repository } from "typeorm";
 import { User } from "../models/database/User.js";
-import { IUserCreateRequest, IUserGetComboRequest, UserFindByType } from "../types/IUser.js";
+import { IUserGetComboRequest } from "../types/IUser.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
-import { Role } from "../models/database/Role.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { GetComboItem } from "../types/shared/IGetCombo.js";
 import { inject, injectable } from "tsyringe";
@@ -12,8 +11,6 @@ export class UserRepository {
 	constructor(
 		@inject("UserTypeORMRepository")
 		private readonly repository: Repository<User>,
-		@inject("RoleTypeORMRepository")
-		private readonly roleRepository: Repository<Role>,
 	) {}
 
 	getRepo = (manager?: EntityManager) => {
@@ -68,27 +65,9 @@ export class UserRepository {
 		}));
 	}
 
-	async findByFields(fields: Partial<UserFindByType>, manager?: EntityManager): Promise<User | null> {
-		const repo = manager ? manager.getRepository(User) : this.repository;
-
-		return await repo.findOne({ where: fields });
-	}
-
-	async create(user: IUserCreateRequest, manager?: EntityManager): Promise<User> {
+	async create(user: User, manager?: EntityManager): Promise<User> {
 		const repo = this.getRepo(manager);
-
-		const roles = await this.roleRepository.findBy({ Id: In(user.Roles) });
-
-		if (roles.length !== user.Roles.length) {
-			throw new Error();
-		}
-
-		const userToSave = repo.create({
-			...user,
-			Roles: roles,
-		});
-
-		return await repo.save(userToSave);
+		return await repo.save(user);
 	}
 
 	// async update(id: string, data: Partial<User>): Promise<User | null> {
@@ -109,59 +88,3 @@ export class UserRepository {
 		return result.affected !== 0;
 	}
 }
-
-// import { isValidObjectId } from "mongoose";
-// import { User, IUserDocument } from "../models/database/user.js";
-// import { IUserRepository } from "../shared/IUserRepository.js";
-// import { UserFilter } from "../types/filters/UserFilter.js";
-// import { ILoginAuth0 } from "../types/Auth0Token.js";
-
-// export class UserRepository implements IUserRepository<IUser> {
-//   public async findAll(filters: UserFilter): Promise<IUser[] | undefined> {
-//     return await User.find(
-//       filters,
-//       "email address state type cbu shop_name cuit"
-//     );
-//   }
-
-//   public async findByEmail(email: string): Promise<IUser | undefined> {
-//     return (
-//       (await User.findOne(
-//         { email },
-//         "_id email username type address state"
-//       )) || undefined
-//     );
-//   }
-
-//   public async findOne(item: { id: string }): Promise<IUser | undefined> {
-//     if (!isValidObjectId(item.id)) return;
-//     return (
-//       (await User.findOne(
-//         { _id: item.id },
-//         "email address state type cbu shop_name cuit"
-//       )) || undefined
-//     );
-//   }
-
-//   public async add(user: IUser | ILoginAuth0): Promise<IUser | undefined> {
-//     const newUser: IUserDocument = new User(user);
-//     return await newUser.save();
-//   }
-
-//   public async update(id: string, user: IUser): Promise<IUser | undefined> {
-//     return (
-//       (await User.findOneAndUpdate({ _id: id }, user, { new: true })) ||
-//       undefined
-//     );
-//   }
-
-//   public async delete(item: { id: string }): Promise<IUser | undefined> {
-//     return (
-//       (await User.findOneAndUpdate(
-//         { _id: item.id },
-//         { state: "Disable" },
-//         { new: true }
-//       )) || undefined
-//     );
-//   }
-// }

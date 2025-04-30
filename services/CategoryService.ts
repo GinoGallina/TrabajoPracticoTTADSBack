@@ -7,13 +7,17 @@ import { Messages } from "../const/Messages.js";
 import { IGetCombo } from "../types/shared/IGetCombo.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { inject, injectable } from "tsyringe";
+import { Category } from "../models/database/Category.js";
+import { BaseService } from "./BaseService.js";
 
 @injectable()
-export class CategoryService {
+export class CategoryService extends BaseService<Category> {
 	constructor(
 		@inject("DataSource") private readonly db: DataSource,
 		@inject("CategoryRepository") private readonly categoryRepository: CategoryRepository,
-	) {}
+	) {
+		super(categoryRepository.getRepo());
+	}
 
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<ICategoryGetAllResponse | null>> {
 		try {
@@ -100,7 +104,7 @@ export class CategoryService {
 			}
 
 			// Not duplicated name
-			if ((await this.categoryRepository.findByName(rq.Name, manager)) != null) {
+			if ((await this.existsBy("Name", rq.Name)) != null) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al crear la categoría", {
 					code: 400,
@@ -108,7 +112,11 @@ export class CategoryService {
 				});
 			}
 
-			const category = await this.categoryRepository.create(rq, manager);
+			const categoryToCreate = new Category({
+				Name: rq.Name,
+			});
+
+			const category = await this.categoryRepository.create(categoryToCreate, manager);
 
 			await queryRunner.commitTransaction();
 
@@ -170,78 +178,4 @@ export class CategoryService {
 			await queryRunner.release();
 		}
 	}
-
-	// 	const category = await this.categoryRepository.create({ name });
-	// 	return {
-	// 		message: "Categoría creada correctamente",
-	// 		data: category,
-	// 		error: null,
-	// 		success: true,
-	// 	};
-	// }
 }
-
-// import { CategoryRepository } from "../repository/userRepository.js";
-
-// const userRepository = new UserRepository();
-// const productRepository = new ProductRepository();
-
-// type ServiceResult<T> = {
-// 	success: boolean;
-// 	data?: T;
-// 	message?: string;
-// };
-
-// export const ProductService = {
-// 	create: async (
-// 		params: IProduct,
-// 	): Promise<ServiceResult<IProduct | void>> => {
-// 		/* create a product
-// 		 * @param {seller_id} - seller that owns the product
-// 		 * @param {name} name - name of the product
-// 		 * @param {description}
-// 		 * @param {price}
-// 		 * @param {stock}
-// 		 * @param {img}
-// 		 */
-// 		const result = await validateSeller(params.seller);
-// 		if (result instanceof Error) {
-// 			return {
-// 				success: false,
-// 				message: result.message,
-// 			};
-// 		}
-// 		try {
-// 			const addedProduct = await productRepository.add(params);
-// 			return {
-// 				success: true,
-// 				data: addedProduct,
-// 			};
-// 		} catch (error) {
-// 			return {
-// 				success: false,
-// 				message: "Failed to add product",
-// 			};
-// 		}
-// 	},
-// };
-
-// const validateSeller = async (id: string): Promise<boolean | Error> => {
-// 	try {
-// 		const user: ISeller = (await userRepository.findOne({ id })) as ISeller;
-// 		if (!user) {
-// 			return new Error("Seller not found");
-// 		}
-// 		if (user.type !== "Seller") {
-// 			return new Error("Seller invalid type");
-// 		}
-// 		if (user.state !== "Active") {
-// 			return new Error("Seller invalid status");
-// 		}
-// 		return true;
-// 	} catch (error) {
-// 		console.log(error);
-
-// 		throw new Error("An error occurred");
-// 	}
-// };

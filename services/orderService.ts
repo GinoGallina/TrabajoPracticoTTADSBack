@@ -170,77 +170,45 @@ export class OrderService {
 		}
 	}
 
-	// async delete(id: string): Promise<IBaseResponse<ICategoryResponse | null>> {
-	// 	// Crear queryRunner
-	// 	const queryRunner = this.db.createQueryRunner();
-	// 	await queryRunner.connect();
-	// 	await queryRunner.startTransaction();
-	// 	const manager = queryRunner.manager;
+	async delete(id: string): Promise<IBaseResponse<IOrderResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
 
-	// 	try {
-	// 		// Check if exists
-	// 		const existingCategory = await this.orderRepository.getById(id);
+		try {
+			// Check if exists
+			const existingCategory = await this.orderRepository.getById(id);
 
-	// 		if (existingCategory == null) {
-	// 			await queryRunner.rollbackTransaction();
-	// 			return createErrorResponse("Error al borrar la categoría", {
-	// 				code: 404,
-	// 				message: Messages.Error.EntityNotFound("Categoría", true),
-	// 			});
-	// 		}
+			if (existingCategory == null) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al borrar la categoría", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Categoría", true),
+				});
+			}
 
-	// 		const deleteCategoryResult = await this.orderRepository.delete(id, manager);
+			const deleteCategoryResult = await this.orderRepository.delete(id, manager);
 
-	// 		if (!deleteCategoryResult) throw new Error();
+			if (!deleteCategoryResult) throw new Error();
 
-	// 		await queryRunner.commitTransaction();
+			await queryRunner.commitTransaction();
 
-	// 		return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-	// 			id: existingCategory.Id!.toString(),
-	// 			name: existingCategory.Name,
-	// 			createdAt: existingCategory.CreatedAt!.toISOString(),
-	// 		});
-	// 	} catch (e) {
-	// 		await queryRunner.rollbackTransaction();
-	// 		console.log(e);
-	// 		return createErrorResponse("Error eliminando categoría", {
-	// 			code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-	// 			message: "",
-	// 		});
-	// 	} finally {
-	// 		await queryRunner.release();
-	// 	}
-	// }
-
-	// 	const order = await this.orderRepository.create({ name });
-	// 	return {
-	// 		message: "Categoría creada correctamente",
-	// 		data: order,
-	// 		error: null,
-	// 		success: true,
-	// 	};
-	// }
+			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
+				id: existingCategory.Id!.toString(),
+				// name: existingCategory.Name,
+				createdAt: existingCategory.CreatedAt!.toISOString(),
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error eliminando categoría", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
 }
-
-// import { OrderRepository } from "../repository/orderRepository.js";
-
-// const orderRepository = new OrderRepository();
-
-// type ServiceResult<T> = {
-//   success: boolean;
-//   data?: T;
-//   message?: string;
-// }
-
-// export const OrderService = {
-//   /*create: async (params: IOrder): Promise<ServiceResult<IOrder | void>> => {
-
-//     //Stock del Producto
-//     //Estado del producto
-//     //Crear Shipment
-//     //Setear Unit-prize del producto
-//     //Calcular amount
-//     //
-
-//   }*/
-// }

@@ -5,7 +5,6 @@ import {
 	IUserGetComboRequest,
 	IUserRegisterResponse,
 	IUserResponse,
-	UserFindByType,
 } from "../types/IUser.js";
 import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
@@ -18,20 +17,20 @@ import bcrypt from "bcrypt";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { IGetCombo } from "../types/shared/IGetCombo.js";
 import { inject, injectable } from "tsyringe";
+import { User } from "../models/database/User.js";
+import { BaseService } from "./BaseService.js";
 
 @injectable()
-export class UserService {
+export class UserService extends BaseService<User> {
 	constructor(
 		@inject("DataSource") private readonly db: DataSource,
 		@inject("UserRepository") private readonly userRepository: UserRepository,
 		@inject("RoleTypeORMRepository") private readonly roleRepository: Repository<Role>,
-	) {}
+	) {
+		super(userRepository.getRepo());
+	}
 
-	findByFields = async (fields: Partial<UserFindByType>, manager?: EntityManager) => {
-		return await this.userRepository.findByFields(fields, manager);
-	};
-
-	validateUser = async (rq: IUserCreateRequest, queryRunner: QueryRunner, manager: EntityManager) => {
+	validateUser = async (rq: IUserCreateRequest, queryRunner: QueryRunner) => {
 		const validationRules = [
 			{
 				condition: !rq.Username,
@@ -119,6 +118,7 @@ export class UserService {
 						field: "cbu",
 						errorMessage: Messages.Error.FieldRequired("cbu"),
 					},
+					// TODO
 					// {
 					// 	condition: !rq.Cuit,
 					// 	field: "cuit",
@@ -127,7 +127,7 @@ export class UserService {
 				],
 			);
 
-		if ((await this.findByFields({ Email: rq.Email }, manager)) != null) {
+		if ((await this.existsBy("Email", rq.Email)) != null) {
 			// Not duplicated email
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
@@ -137,7 +137,7 @@ export class UserService {
 		}
 
 		// Not duplicated username
-		if ((await this.findByFields({ Username: rq.Username }, manager)) != null) {
+		if ((await this.existsBy("Username", rq.Username)) != null) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
 				code: 400,
@@ -240,13 +240,25 @@ export class UserService {
 
 		try {
 			// Validate request
-			const hasError = await this.validateUser(rq, queryRunner, manager);
+			const hasError = await this.validateUser(rq, queryRunner);
 
 			if (hasError !== null) return hasError;
 
-			const finalRq = { ...rq, Password: await bcrypt.hash(rq.Password, 10) };
+			const roles = await this.roleRepository.findBy({ Id: In(rq.Roles) });
 
-			const user = await this.userRepository.create(finalRq, manager);
+			const userToCreate = new User({
+				Email: rq.Email,
+				Username: rq.Username,
+				Address: rq.Address,
+				Password: await bcrypt.hash(rq.Password, 10),
+				StoreName: rq.StoreName,
+				StoreDescription: rq.StoreDescription,
+				Cbu: rq.Cbu,
+				Cuit: rq.Cuit,
+				Roles: roles,
+			});
+
+			const user = await this.userRepository.create(userToCreate, manager);
 
 			await queryRunner.commitTransaction();
 
@@ -281,11 +293,25 @@ export class UserService {
 	): Promise<IBaseResponse<IUserRegisterResponse | null>> {
 		try {
 			// Validate request
-			const hasError = await this.validateUser(rq, queryRunner, manager);
+			const hasError = await this.validateUser(rq, queryRunner);
 
 			if (hasError !== null) return hasError;
 
-			const user = await this.userRepository.create(rq, manager);
+			const roles = await this.roleRepository.findBy({ Id: In(rq.Roles) });
+
+			const userToCreate = new User({
+				Email: rq.Email,
+				Username: rq.Username,
+				Address: rq.Address,
+				Password: await bcrypt.hash(rq.Password, 10),
+				StoreName: rq.StoreName,
+				StoreDescription: rq.StoreDescription,
+				Cbu: rq.Cbu,
+				Cuit: rq.Cuit,
+				Roles: roles,
+			});
+
+			const user = await this.userRepository.create(userToCreate, manager);
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Usuario"), {
 				id: user.Id!.toString(),

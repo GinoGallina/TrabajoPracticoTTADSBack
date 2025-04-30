@@ -11,6 +11,7 @@ import jwt from "jsonwebtoken";
 import { inject, injectable } from "tsyringe";
 import { IUserToken } from "../types/shared/IToken.js";
 import { ContextService } from "./ContextService.js";
+import { User } from "../models/database/User.js";
 
 @injectable()
 export class AuthService {
@@ -57,7 +58,7 @@ export class AuthService {
 
 			if (foundRoles.some((role) => role.Name === RoleEnum.Admin)) {
 				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al crear el usuario", {
+				return createErrorResponse("Error al registrar el usuario", {
 					code: 400,
 					message: "No puede crear un usuario Administrador",
 				});
@@ -67,7 +68,7 @@ export class AuthService {
 			const user = await this.userService.register(rq, queryRunner, manager);
 
 			if (!user.success && user.error) {
-				return createErrorResponse("Error al crear el usuario", {
+				return createErrorResponse("Error al registrar el usuario", {
 					code: user.error.code,
 					message: user.error?.message,
 				});
@@ -99,7 +100,7 @@ export class AuthService {
 		} catch (e) {
 			console.log(e);
 			await queryRunner.rollbackTransaction();
-			return createErrorResponse("Error creando usuario", {
+			return createErrorResponse("Error inesperado registrando al usuario", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -109,7 +110,10 @@ export class AuthService {
 	async login(req: ILoginRequest): Promise<IBaseResponse<ILoginResponse | null>> {
 		try {
 			// Check if user exists
-			const user = await this.userService.findByFields({ Email: req.email });
+			const user = (await this.userService.findOneBy("Email", req.email, { relations: ["Roles"] })) as Pick<
+				User,
+				"Id" | "Email" | "Username" | "Password" | "Address" | "Roles"
+			> | null;
 
 			if (user == null) {
 				return createErrorResponse("Error al hacer logín", {
@@ -134,7 +138,7 @@ export class AuthService {
 				user.Username,
 			);
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Usuario", true), {
+			return createSuccessResponse("Inicio de sesión correcto", {
 				user: {
 					id: user.Id!.toString(),
 					roles: user.Roles.map((x) => x.Name),
@@ -147,7 +151,7 @@ export class AuthService {
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error eliminando usuario", {
+			return createErrorResponse("Error inesperado al hacer login", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});

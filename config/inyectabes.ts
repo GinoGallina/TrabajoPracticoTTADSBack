@@ -26,6 +26,10 @@ import { Order } from "../models/database/Order.js";
 import { OrderRepository } from "../repository/OrderRepository.js";
 import { OrderService } from "../services/OrderService.js";
 import { OrderController } from "../controllers/OrderController.js";
+import { ReviewController } from "../controllers/ReviewController.js";
+import { ReviewService } from "../services/ReviewService.js";
+import { ReviewRepository } from "../repository/reviewRepository.js";
+import { Review } from "../models/database/review.js";
 
 export const registerInyectables = () => {
 	// Database
@@ -50,6 +54,9 @@ export const registerInyectables = () => {
 	container.register("OrderTypeORMRepository", {
 		useValue: db.getRepository(Order),
 	});
+	container.register("ReviewTypeORMRepository", {
+		useValue: db.getRepository(Review),
+	});
 
 	// Repositories
 	container.register("ProductRepository", { useClass: ProductRepository });
@@ -58,6 +65,7 @@ export const registerInyectables = () => {
 	container.register("RoleRepository", { useClass: RoleRepository });
 	container.register("PaymentTypeRepository", { useClass: PaymentTypeRepository });
 	container.register("OrderRepository", { useClass: OrderRepository });
+	container.register("ReviewRepository", { useClass: ReviewRepository });
 
 	// Services
 	container.register("CategoryService", { useClass: CategoryService });
@@ -67,6 +75,7 @@ export const registerInyectables = () => {
 	container.register("RoleService", { useClass: RoleService });
 	container.register("PaymentTypeService", { useClass: PaymentTypeService });
 	container.register("OrderService", { useClass: OrderService });
+	container.register("ReviewService", { useClass: ReviewService });
 
 	// Controllers
 	container.register("ProductController", { useClass: ProductController });
@@ -76,4 +85,5 @@ export const registerInyectables = () => {
 	container.register("RoleController", { useClass: RoleController });
 	container.register("PaymentTypeController", { useClass: PaymentTypeController });
 	container.register("OrderController", { useClass: OrderController });
+	container.register("ReviewController", { useClass: ReviewController });
 };

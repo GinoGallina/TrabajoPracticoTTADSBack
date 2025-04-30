@@ -3,6 +3,7 @@ import { BaseModel } from "./BaseModel.js";
 import { Product } from "./Product.js";
 import { Role } from "./Role.js";
 import { Order } from "./Order.js";
+import { Review } from "./review.js";
 
 @Entity("User")
 export class User extends BaseModel {
@@ -37,6 +38,9 @@ export class User extends BaseModel {
 	@OneToMany(() => Order, (order) => order.User)
 	Orders!: Order[];
 
+	@OneToMany(() => Review, (item) => item.Product)
+	Reviews!: Review[];
+
 	@ManyToMany(() => Role, { eager: true })
 	@JoinTable({
 		name: "UserRoles",
@@ -44,65 +48,9 @@ export class User extends BaseModel {
 		inverseJoinColumn: { name: "RoleId", referencedColumnName: "Id" },
 	})
 	Roles!: Role[];
+
+	constructor(init?: Partial<User>) {
+		super();
+		Object.assign(this, init);
+	}
 }
-
-// import mongoose, { Document, Schema, Model } from "mongoose";
-// import mongooseUniqueValidator from "mongoose-unique-validator";
-
-// interface IUserDocument extends IUser, Document {}
-
-// function isSellerType(this: IUserDocument): boolean {
-//   return this.type == "Seller";
-// }
-
-// export const userSchema = new Schema({
-//   username: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     uniqueCaseInsensitive: true,
-//     trim: true,
-//   },
-//   email: {
-//     type: String,
-//     required: true,
-//     unique: true,
-//     uniqueCaseInsensitive: true,
-//   },
-//   type: {
-//     type: String,
-//     enum: ["Admin", "User", "Seller"],
-//     required: true,
-//     default: "User",
-//   },
-//   password: { type: String, required: false, trim: true },
-//   address: { type: String, required: false },
-//   state: { type: String, default: "Active" },
-//   cbu: {
-//     type: String,
-//     required: function (this: any) {
-//       return isSellerType.call(this);
-//     },
-//   },
-//   shop_name: {
-//     type: String,
-//     required: function (this: any) {
-//       return isSellerType.call(this);
-//     },
-//   },
-//   cuit: {
-//     type: String,
-//     required: function (this: any) {
-//       return isSellerType.call(this);
-//     },
-//   },
-// });
-
-// userSchema.plugin(mongooseUniqueValidator);
-
-// const User: Model<IUserDocument> = mongoose.model<IUserDocument>(
-//   "User",
-//   userSchema
-// );
-
-// export { User, IUserDocument };

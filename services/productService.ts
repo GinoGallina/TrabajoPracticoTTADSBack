@@ -1,4 +1,4 @@
-import { DataSource, EntityManager, QueryRunner } from "typeorm";
+import { DataSource, QueryRunner } from "typeorm";
 import { ProductRepository } from "../repository/ProductRepository.js";
 import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
@@ -30,7 +30,7 @@ export class ProductService extends BaseService<Product> {
 		super(productRepository.getRepo());
 	}
 
-	validateProduct = async (rq: IProductCreateRequest, queryRunner: QueryRunner, manager: EntityManager) => {
+	validateProduct = async (rq: IProductCreateRequest, queryRunner: QueryRunner) => {
 		const validationRules = [
 			{
 				condition: !rq.Name,
@@ -60,7 +60,7 @@ export class ProductService extends BaseService<Product> {
 		if (hasError !== null) return hasError;
 
 		// Not duplicated name
-		if ((await this.productRepository.findByName(rq.Name, manager)) != null) {
+		if ((await this.existsBy("Name", rq.Name)) != null) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el producto", {
 				code: 400,
@@ -192,8 +192,11 @@ export class ProductService extends BaseService<Product> {
 				stock: product.Stock,
 				image: product.Image,
 				categoryName: product.Category.Name,
-				userName: product.User.Username,
-				createdAt: product.CreatedAt!.toISOString(),
+				sellerDetails: {
+					userName: product.User.Username,
+					storeDescription: product.User.StoreDescription || "",
+					storeName: product.User.StoreName || "",
+				},
 			});
 		} catch (e) {
 			console.log(e);
@@ -212,7 +215,7 @@ export class ProductService extends BaseService<Product> {
 		const manager = queryRunner.manager;
 
 		try {
-			const hasError = await this.validateProduct(rq, queryRunner, manager);
+			const hasError = await this.validateProduct(rq, queryRunner);
 
 			if (hasError !== null) return hasError;
 
@@ -288,76 +291,4 @@ export class ProductService extends BaseService<Product> {
 			await queryRunner.release();
 		}
 	}
-
-	// 	const category = await this.productRepository.create({ name });
-	// 	return {
-	// 		message: "Categoría creada correctamente",
-	// 		data: category,
-	// 		error: null,
-	// 		success: true,
-	// 	};
-	// }
 }
-// import { ProductRepository } from "../repository/productRepository.js";
-// import { UserRepository } from "../repository/userRepository.js";
-
-// const userRepository = new UserRepository();
-// const productRepository = new ProductRepository();
-
-// type ServiceResult<T> = {
-//   success: boolean;
-//   data?: T;
-//   message?: string;
-// };
-
-// export const ProductService = {
-//   create: async (params: IProduct): Promise<ServiceResult<IProduct | void>> => {
-//     /* create a product
-//      * @param {seller_id} - seller that owns the product
-//      * @param {name} name - name of the product
-//      * @param {description}
-//      * @param {price}
-//      * @param {stock}
-//      * @param {img}
-//      */
-//     const result = await validateSeller(params.seller);
-//     if (result instanceof Error) {
-//       return {
-//         success: false,
-//         message: result.message,
-//       };
-//     }
-//     try {
-//       const addedProduct = await productRepository.add(params);
-//       return {
-//         success: true,
-//         data: addedProduct,
-//       };
-//     } catch (error) {
-//       return {
-//         success: false,
-//         message: "Failed to add product",
-//       };
-//     }
-//   },
-// };
-
-// const validateSeller = async (id: string): Promise<boolean | Error> => {
-//   try {
-//     const user: ISeller = (await userRepository.findOne({ id })) as ISeller;
-//     if (!user) {
-//       return new Error("Seller not found");
-//     }
-//     if (user.type !== "Seller") {
-//       return new Error("Seller invalid type");
-//     }
-//     if (user.state !== "Active") {
-//       return new Error("Seller invalid status");
-//     }
-//     return true;
-//   } catch (error) {
-//     console.log(error);
-
-//     throw new Error("An error occurred");
-//   }
-// };

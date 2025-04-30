@@ -87,15 +87,6 @@ export class ProductRepository {
 		return product;
 	}
 
-	async findByName(name: string, manager?: EntityManager): Promise<Product | null> {
-		const repo = this.getRepo(manager);
-		const product = await repo.findOne({
-			where: { Name: name, DeletedAt: IsNull() },
-		});
-		if (!product) return null;
-		return product;
-	}
-
 	async create(product: IProductCreateRequest, manager?: EntityManager): Promise<Product> {
 		const repo = this.getRepo(manager);
 		const fixedProduct = {

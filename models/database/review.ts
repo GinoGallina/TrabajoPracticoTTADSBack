@@ -1,32 +1,32 @@
-// import mongoose, { Document, Schema, Model } from "mongoose";
-// import mongooseUniqueValidator from "mongoose-unique-validator";
+import { Entity, Column, JoinColumn, ManyToOne } from "typeorm";
+import { BaseModel } from "./BaseModel.js";
+import { Product } from "./Product.js";
+import { User } from "./User.js";
 
-// interface IReviewDocument extends IReview, Document {}
+@Entity("Review")
+export class Review extends BaseModel {
+	@Column({ type: "varchar", length: 350 })
+	Description!: string;
 
-// const reviewSchema: Schema<IReviewDocument> = new mongoose.Schema(
-//   {
-//     comment: {
-//       type: String,
-//       required: [true, "Review must have a comment"],
-//     },
-//     rate: {
-//       type: Number,
-//       required: [true, "Review must have a rate"],
-//       min: [1, "Value must be at least 1"],
-//       max: [5, "Value must be 5 or lower"],
-//     },
-//     state: { type: String, enum: ["Active", "Archived"], default: "Active" },
-//     // order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' } // Referencia a la categoría
-//   },
-//   {
-//     timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-//   },
-// );
+	@Column({ type: "int" })
+	Rate!: number;
 
-// reviewSchema.plugin(mongooseUniqueValidator);
-// const Review: Model<IReviewDocument> = mongoose.model<IReviewDocument>(
-//   "Review",
-//   reviewSchema,
-// );
+	@Column({ type: "int" })
+	ProductId!: number;
 
-// export { Review, IReviewDocument };
+	@Column({ type: "int" })
+	UserId!: number;
+
+	@ManyToOne(() => Product, (product) => product.Reviews)
+	@JoinColumn({ name: "User" })
+	Product!: Product;
+
+	@ManyToOne(() => User, (user) => user.Reviews)
+	@JoinColumn({ name: "UserId" })
+	User!: User;
+
+	constructor(init?: Partial<Review>) {
+		super();
+		Object.assign(this, init);
+	}
+}

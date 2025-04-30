@@ -12,4 +12,10 @@ export abstract class BaseModel {
 
 	@DeleteDateColumn({ nullable: true })
 	DeletedAt?: Date | null;
+
+	constructor(init?: Partial<BaseModel>) {
+		if (init) {
+			Object.assign(this, init);
+		}
+	}
 }
