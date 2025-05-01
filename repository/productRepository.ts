@@ -37,16 +37,17 @@ export class ProductRepository {
 		const { skip, take, order } = getAllPaginationOptions<Product>(query, validOrderColumns);
 
 		// TODO ERROR IN query.categoryIds.map(Number)
-		// TODO ERROR no anda available false
 
 		const categoryIds = Array.isArray(query.categoryIds) ? query.categoryIds.map(Number) : [Number(query.categoryIds)];
+
+		console.log(query.available);
+		console.log(false);
 
 		// Fiter options
 		const baseConditions = {
 			DeletedAt: IsNull(),
 			...(query.categoryIds && query.categoryIds.length > 0 && { Category: { Id: In(categoryIds) } }),
-			...(query.available === true && { Stock: MoreThan(0) }),
-			...(query.available === false && { Stock: MoreThanOrEqual(0) }),
+			...{ Stock: query.available === "true" ? MoreThan(0) : MoreThanOrEqual(0) },
 			...(query.price && {
 				Price: query.lessThan === true ? LessThanOrEqual(Number(query.price)) : MoreThanOrEqual(Number(query.price)),
 			}),
@@ -65,7 +66,7 @@ export class ProductRepository {
 
 		const [items, totalCount] = await this.repository.findAndCount({
 			where,
-			relations: ["Category"],
+			relations: ["Category", "Reviews"],
 			select: { Id: true, Name: true, Description: true, CreatedAt: true, Price: true, Stock: true },
 			order,
 			skip,

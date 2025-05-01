@@ -104,7 +104,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 			}
 
 			// Not duplicated name
-			if ((await this.existsBy("Name", rq.Name)) != null) {
+			if (await this.existsBy("Name", rq.Name)) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al crear la categoría", {
 					code: 400,

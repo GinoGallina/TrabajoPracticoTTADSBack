@@ -127,7 +127,7 @@ export class UserService extends BaseService<User> {
 				],
 			);
 
-		if ((await this.existsBy("Email", rq.Email)) != null) {
+		if (await this.existsBy("Email", rq.Email)) {
 			// Not duplicated email
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
@@ -137,7 +137,7 @@ export class UserService extends BaseService<User> {
 		}
 
 		// Not duplicated username
-		if ((await this.existsBy("Username", rq.Username)) != null) {
+		if (await this.existsBy("Username", rq.Username)) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
 				code: 400,

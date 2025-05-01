@@ -1,15 +1,26 @@
 import { IGenericGetAllRequest } from "./shared/IBaseRequest.js";
 import { IGenericGetAllResponse } from "./shared/IBaseResponse.js";
 
-// Get All
+// Get All My Products
 export interface IMyProductGetAllRequest extends IGenericGetAllRequest {
 	userId?: string;
 }
+export interface IMyProductGetAllResponse extends IGenericGetAllResponse {
+	products: {
+		id: string;
+		name: string;
+		price: number;
+		stock: number;
+		categoryName: string;
+		createdAt: string;
+	}[];
+}
 
+// Get All Products
 export interface IProductGetAllRequest extends IGenericGetAllRequest {
 	text?: string;
 	categoryIds?: string[];
-	available?: boolean;
+	available?: string;
 	price?: number;
 	lessThan?: boolean;
 }
@@ -18,12 +29,13 @@ export interface IProductGetAllResponse extends IGenericGetAllResponse {
 	products: {
 		id: string;
 		name: string;
-		description: string;
 		price: number;
 		stock: number;
 		categoryName: string;
-		categoryId: string;
-		createdAt: string;
+		rating: {
+			rate: number;
+			totalReviews: number;
+		};
 	}[];
 }
 

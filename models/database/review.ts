@@ -18,7 +18,7 @@ export class Review extends BaseModel {
 	UserId!: number;
 
 	@ManyToOne(() => Product, (product) => product.Reviews)
-	@JoinColumn({ name: "User" })
+	@JoinColumn({ name: "ProductId" })
 	Product!: Product;
 
 	@ManyToOne(() => User, (user) => user.Reviews)

@@ -11,6 +11,7 @@ import {
 	IProductResponse,
 	IProductGetOneResponse,
 	IProductGetDetailsResponse,
+	IMyProductGetAllResponse,
 } from "../types/IProduct.js";
 import { validateFields } from "../utils/ServiceHelpers.js";
 import { CategoryService } from "./CategoryService.js";
@@ -18,6 +19,7 @@ import { UserService } from "./UserService.js";
 import { injectable, inject } from "tsyringe";
 import { BaseService } from "./BaseService.js";
 import { Product } from "../models/database/Product.js";
+import { Review } from "../models/database/review.js";
 
 @injectable()
 export class ProductService extends BaseService<Product> {
@@ -60,7 +62,7 @@ export class ProductService extends BaseService<Product> {
 		if (hasError !== null) return hasError;
 
 		// Not duplicated name
-		if ((await this.existsBy("Name", rq.Name)) != null) {
+		if (await this.existsBy("Name", rq.Name)) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el producto", {
 				code: 400,
@@ -87,7 +89,14 @@ export class ProductService extends BaseService<Product> {
 		return null;
 	};
 
-	async getAllMyProducts(query: IMyProductGetAllRequest): Promise<IBaseResponse<IProductGetAllResponse | null>> {
+	getRate = (reviews: Review[]) => {
+		const rates = reviews.map((r) => r.Rate);
+		const avgRate = rates.length ? Math.round(rates.reduce((a, b) => a + b, 0) / rates.length) : 0;
+
+		return Math.max(0, Math.min(5, avgRate));
+	};
+
+	async getAllMyProducts(query: IMyProductGetAllRequest): Promise<IBaseResponse<IMyProductGetAllResponse | null>> {
 		try {
 			const products = await this.productRepository.getAllMyProducts(query);
 			return {
@@ -100,7 +109,6 @@ export class ProductService extends BaseService<Product> {
 						price: x.Price,
 						stock: x.Stock,
 						categoryName: x.Category.Name,
-						categoryId: x.Category.Id!.toString(),
 						createdAt: x.CreatedAt!.toISOString(),
 					})),
 					totalCount: products?.totalCount || 0,
@@ -126,12 +134,13 @@ export class ProductService extends BaseService<Product> {
 					products: products.items.map((x) => ({
 						id: x.Id!.toString(),
 						name: x.Name,
-						description: x.Description,
 						price: x.Price,
 						stock: x.Stock,
 						categoryName: x.Category.Name,
-						categoryId: x.Category.Id!.toString(),
-						createdAt: x.CreatedAt!.toISOString(),
+						rating: {
+							rate: this.getRate(x.Reviews),
+							totalReviews: x.Reviews.length,
+						},
 					})),
 					totalCount: products?.totalCount || 0,
 				},

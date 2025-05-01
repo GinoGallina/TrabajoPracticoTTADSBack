@@ -125,7 +125,7 @@ export class AuthService {
 			if (!(await bcrypt.compare(req.password, user.Password))) {
 				return createErrorResponse("Error al hacer logín", {
 					code: 401,
-					message: Messages.Error.EntityNotFound("Usuario"),
+					message: "Contraseña incorrecta",
 				});
 			}
 
