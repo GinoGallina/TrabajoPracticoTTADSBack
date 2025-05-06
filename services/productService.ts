@@ -21,6 +21,7 @@ import { Product } from "../models/database/Product.js";
 import { Review } from "../models/database/Review.js";
 import { formatDateToArgentina } from "../utils/DateFormatter.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { AuthService } from "./AuthService.js";
 
 @injectable()
 export class ProductService extends BaseService<Product> {
@@ -29,6 +30,7 @@ export class ProductService extends BaseService<Product> {
 		@inject("ProductRepository") private readonly productRepository: ProductRepository,
 		@inject("CategoryService") private readonly categoryService: CategoryService,
 		@inject("UserService") private readonly userService: UserService,
+		@inject("AuthService") private readonly authService: AuthService,
 	) {
 		super(productRepository.getRepo());
 	}
@@ -137,6 +139,7 @@ export class ProductService extends BaseService<Product> {
 						name: x.Name,
 						price: x.Price,
 						stock: x.Stock,
+						image: x.Image,
 						categoryName: x.Category.Name,
 						rating: {
 							rate: this.getRate(x.Reviews),
@@ -237,6 +240,7 @@ export class ProductService extends BaseService<Product> {
 				Price: rq.Price,
 				Stock: rq.Stock,
 				Image: rq.Image,
+				UserId: Number(this.authService.getToken().id),
 			});
 
 			const product = await this.productRepository.create(productToCreate, manager);
@@ -257,7 +261,7 @@ export class ProductService extends BaseService<Product> {
 		} catch (e) {
 			console.log(e);
 			await queryRunner.rollbackTransaction();
-			return createErrorResponse("Error creando categoría", {
+			return createErrorResponse("Error creando producto", {
 				code: e instanceof Error ? 500 : 500,
 				message: "",
 			});

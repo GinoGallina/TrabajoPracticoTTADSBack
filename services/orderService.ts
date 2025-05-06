@@ -297,6 +297,7 @@ export class OrderService {
 		}
 	}
 
+	// TODO
 	// async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
 	// 	// Crear queryRunner
 	// 	const queryRunner = this.db.createQueryRunner();

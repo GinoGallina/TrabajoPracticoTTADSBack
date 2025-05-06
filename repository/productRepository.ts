@@ -93,7 +93,7 @@ export class ProductRepository extends BaseRepository<Product> {
 		const [items, totalCount] = await this.productRepository.findAndCount({
 			where,
 			relations: ["Category", "Reviews"],
-			select: { Id: true, Name: true, Description: true, CreatedAt: true, Price: true, Stock: true },
+			select: { Id: true, Name: true, Description: true, Image: true, CreatedAt: true, Price: true, Stock: true },
 			order,
 			skip,
 			take,

@@ -28,6 +28,7 @@ export interface IProductGetAllResponse extends IGenericGetAllResponse {
 		id: string;
 		name: string;
 		price: number;
+		image?: string;
 		stock: number;
 		categoryName: string;
 		rating: {
