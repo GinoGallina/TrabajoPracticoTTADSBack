@@ -7,7 +7,7 @@ import { Role } from "../models/database/Role.js";
 import { PaymentType } from "../models/database/PaymentType.js";
 import { Order } from "../models/database/Order.js";
 import { OrderItem } from "../models/database/OrderItem.js";
-import { Review } from "../models/database/review.js";
+import { Review } from "../models/database/Review.js";
 
 let db = new DataSource({
 	type: "postgres",

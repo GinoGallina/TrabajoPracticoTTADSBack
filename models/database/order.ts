@@ -20,6 +20,9 @@ export class Order extends BaseModel {
 	@Column({ type: "varchar" })
 	ShippingAddress!: string;
 
+	@Column({ type: "timestamp", nullable: true })
+	CanceledAt?: Date | null;
+
 	@Column({ type: "int" })
 	PaymentTypeId!: number;
 

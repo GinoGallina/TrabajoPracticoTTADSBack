@@ -11,13 +11,14 @@ import jwt from "jsonwebtoken";
 import { inject, injectable } from "tsyringe";
 import { IUserToken } from "../types/shared/IToken.js";
 import { ContextService } from "./ContextService.js";
-import { User } from "../models/database/User.js";
+import { UserRepository } from "../repository/UserRepository.js";
 
 @injectable()
 export class AuthService {
 	constructor(
 		@inject("DataSource") private readonly db: DataSource,
 		@inject("UserService") private readonly userService: UserService,
+		@inject("UserRepository") private readonly userRepository: UserRepository,
 		@inject("RoleTypeORMRepository") private readonly roleRepository: Repository<Role>,
 	) {}
 
@@ -110,10 +111,14 @@ export class AuthService {
 	async login(req: ILoginRequest): Promise<IBaseResponse<ILoginResponse | null>> {
 		try {
 			// Check if user exists
-			const user = (await this.userService.findOneBy("Email", req.email, { relations: ["Roles"] })) as Pick<
-				User,
-				"Id" | "Email" | "Username" | "Password" | "Address" | "Roles"
-			> | null;
+			const user = await this.userRepository.findOneBy(
+				{ Email: req.email },
+				{
+					relations: {
+						Roles: true,
+					},
+				},
+			);
 
 			if (user == null) {
 				return createErrorResponse("Error al hacer logín", {

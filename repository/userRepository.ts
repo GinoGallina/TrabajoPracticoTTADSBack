@@ -1,29 +1,50 @@
-import { EntityManager, In, IsNull, Repository } from "typeorm";
+import { EntityManager, FindOptionsWhere, In, IsNull, Like, Repository } from "typeorm";
 import { User } from "../models/database/User.js";
-import { IUserGetComboRequest } from "../types/IUser.js";
+import { IUserGetAllRequest, IUserGetComboRequest } from "../types/IUser.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
-import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { GetComboItem } from "../types/shared/IGetCombo.js";
 import { inject, injectable } from "tsyringe";
+import { BaseRepository } from "./BaseRepository.js";
 
 @injectable()
-export class UserRepository {
+export class UserRepository extends BaseRepository<User> {
 	constructor(
 		@inject("UserTypeORMRepository")
-		private readonly repository: Repository<User>,
-	) {}
+		private readonly userRepository: Repository<User>,
+	) {
+		super(User, userRepository);
+	}
 
 	getRepo = (manager?: EntityManager) => {
-		return manager ? manager.getRepository(User) : this.repository;
+		return manager ? manager.getRepository(User) : this.userRepository;
 	};
 
-	async getAll(query: IGenericGetAllRequest): Promise<{ items: User[]; totalCount: number }> {
+	buildUserWhere(query: IUserGetAllRequest): FindOptionsWhere<User> | FindOptionsWhere<User>[] {
+		const base: FindOptionsWhere<User> = { DeletedAt: IsNull() };
+
+		if (query.roles && query.roles.length > 0) {
+			const rolesIds = Array.isArray(query.roles) ? query.roles.map(Number) : [Number(query.roles)];
+
+			base.Roles = { Id: In(rolesIds) };
+		}
+
+		if (query.text) {
+			return [
+				{ ...base, Email: Like(`%${query.text}%`) },
+				{ ...base, Username: Like(`%${query.text}%`) },
+			];
+		}
+
+		return base;
+	}
+
+	async getAll(query: IUserGetAllRequest): Promise<{ items: User[]; totalCount: number }> {
 		const validOrderColumns = createValidOrderColumns<User>(["Username", "Email", "Address", "CreatedAt"]);
 
 		const { skip, take, order } = getAllPaginationOptions<User>(query, validOrderColumns);
 
-		const [items, totalCount] = await this.repository.findAndCount({
-			where: { DeletedAt: IsNull() },
+		const [items, totalCount] = await this.userRepository.findAndCount({
+			where: this.buildUserWhere(query),
 			select: { Id: true, Email: true, Address: true, Username: true, CreatedAt: true },
 			order,
 			skip,
@@ -33,22 +54,8 @@ export class UserRepository {
 		return { items, totalCount };
 	}
 
-	async getById(id: string): Promise<User | null> {
-		const userId = Number(id);
-
-		if (isNaN(userId)) return null;
-
-		const user = await this.repository.findOne({
-			where: { Id: userId, DeletedAt: IsNull() },
-		});
-
-		if (!user) return null;
-
-		return user;
-	}
-
 	async getCombo(rq: IUserGetComboRequest): Promise<GetComboItem[]> {
-		const users = await this.repository.find({
+		const users = await this.userRepository.find({
 			select: { Id: true, Username: true },
 			where: {
 				DeletedAt: IsNull(),
@@ -63,28 +70,5 @@ export class UserRepository {
 			id: c.Id!.toString(),
 			label: c.Username,
 		}));
-	}
-
-	async create(user: User, manager?: EntityManager): Promise<User> {
-		const repo = this.getRepo(manager);
-		return await repo.save(user);
-	}
-
-	// async update(id: string, data: Partial<User>): Promise<User | null> {
-	// 	const user = await this.getById(id);
-	// 	if (!category) return null;
-
-	// 	Object.assign(category, data);
-	// 	return await this.repository.save(category);
-	// }
-
-	async delete(id: string, manager?: EntityManager): Promise<boolean | null> {
-		const userId = Number(id);
-
-		if (isNaN(userId)) return null;
-
-		const repo = this.getRepo(manager);
-		const result = await repo.softDelete(id);
-		return result.affected !== 0;
 	}
 }

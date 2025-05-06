@@ -8,8 +8,9 @@ export const ReviewRouter = () => {
 	const reviewController = container.resolve(ReviewController);
 
 	router.get("/getAll", reviewController.getAll.bind(reviewController));
-	router.get("/getOne/:id", reviewController.getOne.bind(reviewController));
 	router.post("/create", reviewController.create.bind(reviewController));
+	router.get("/getOne/:id", reviewController.getOne.bind(reviewController));
+	router.post("/update/:id", reviewController.update.bind(reviewController));
 	router.post("/delete/:id", reviewController.delete.bind(reviewController));
 
 	return router;

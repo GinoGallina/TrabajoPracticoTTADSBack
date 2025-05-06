@@ -3,7 +3,7 @@ import { BaseModel } from "./BaseModel.js";
 import { Product } from "./Product.js";
 import { Role } from "./Role.js";
 import { Order } from "./Order.js";
-import { Review } from "./review.js";
+import { Review } from "./Review.js";
 
 @Entity("User")
 export class User extends BaseModel {

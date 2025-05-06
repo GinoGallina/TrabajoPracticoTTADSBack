@@ -1,7 +1,12 @@
-import { DataSource } from "typeorm";
+import { DataSource, QueryRunner } from "typeorm";
 import { PaymentTypeRepository } from "../repository/PaymentTypeRepository.js";
-import { IPaymentTypeCreateRequest, IPaymentTypeGetAllResponse, IPaymentTypeResponse } from "../types/IPaymentType.js";
-import { IBaseResponse } from "../types/shared/IBaseResponse.js";
+import {
+	IPaymentTypeCreateRequest,
+	IPaymentTypeGetAllResponse,
+	IPaymentTypeResponse,
+	IPaymentTypeUpdateRequest,
+} from "../types/IPaymentType.js";
+import { IBaseResponse, IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import { IGetCombo } from "../types/shared/IGetCombo.js";
@@ -9,6 +14,7 @@ import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { inject, injectable } from "tsyringe";
 import { BaseService } from "./BaseService.js";
 import { PaymentType } from "../models/database/PaymentType.js";
+import { formatDateToArgentina } from "../utils/DateFormatter.js";
 
 @injectable()
 export class PaymentTypeService extends BaseService<PaymentType> {
@@ -17,6 +23,26 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 		@inject("PaymentTypeRepository") private readonly paymentTypeRepository: PaymentTypeRepository,
 	) {
 		super(paymentTypeRepository.getRepo());
+	}
+
+	async validatePaymentType(rq: IPaymentTypeCreateRequest | IPaymentTypeUpdateRequest, queryRunner: QueryRunner, id?: string) {
+		// Validate request
+		if (!rq.Name) {
+			await queryRunner.rollbackTransaction();
+			return createErrorResponse("Error al crear el método de pago", {
+				code: 400,
+				message: Messages.Error.FieldRequired("nombre"),
+			});
+		}
+
+		// Not duplicated name
+		if (await this.paymentTypeRepository.existsBy("Name", rq.Name, id)) {
+			await queryRunner.rollbackTransaction();
+			return createErrorResponse("Error al crear método de pago", {
+				code: 400,
+				message: Messages.Error.UniqueField("nombre"),
+			});
+		}
 	}
 
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IPaymentTypeGetAllResponse | null>> {
@@ -28,7 +54,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 					paymentTypes: paymentTypes.items.map((x) => ({
 						id: x.Id!.toString(),
 						name: x.Name,
-						createdAt: x.CreatedAt!.toISOString(),
+						createdAt: formatDateToArgentina(x.CreatedAt!),
 					})),
 					totalCount: paymentTypes?.totalCount || 0,
 				},
@@ -37,7 +63,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo categorías", {
+			return createErrorResponse("Error obteniendo métodos de pago", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -46,21 +72,22 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 
 	async getOne(id: string): Promise<IBaseResponse<IPaymentTypeResponse | null>> {
 		try {
-			const paymentType = await this.paymentTypeRepository.getById(id);
+			const paymentType = await this.paymentTypeRepository.getById(Number(id));
+
 			if (!paymentType)
-				return createErrorResponse("Categoría no encontrada", {
+				return createErrorResponse("Método de pago no encontrada", {
 					code: 404,
-					message: Messages.Error.EntityNotFound("Categoría", true),
+					message: Messages.Error.EntityNotFound("Método de pago"),
 				});
 
-			return createSuccessResponse("Categoría obtenida correctamente", {
+			return createSuccessResponse("Método de pago obtenidao correctamente", {
 				id: paymentType.Id!.toString(),
 				name: paymentType.Name,
-				createdAt: paymentType.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(paymentType.CreatedAt!),
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error creando categoría", {
+			return createErrorResponse("Error creando método de pago", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -79,7 +106,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo combo de categorías", {
+			return createErrorResponse("Error obteniendo combo de métodos de pago", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -94,23 +121,9 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 		const manager = queryRunner.manager;
 
 		try {
-			// Validate request
-			if (!rq.Name) {
-				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al crear la categoría", {
-					code: 400,
-					message: Messages.Error.FieldRequired("nombre"),
-				});
-			}
+			const validateRq = await this.validatePaymentType(rq, queryRunner);
 
-			// Not duplicated name
-			if (await this.existsBy("Name", rq.Name)) {
-				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al crear la categoría", {
-					code: 400,
-					message: Messages.Error.UniqueField("nombre"),
-				});
-			}
+			if (validateRq) return validateRq;
 
 			const paymentTypeToCreate = new PaymentType({
 				Name: rq.Name,
@@ -120,15 +133,15 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Categoría", true), {
+			return createSuccessResponse(Messages.CRUD.EntityCreated("Método de pago"), {
 				id: paymentType.Id!.toString(),
 				name: paymentType.Name,
-				createdAt: paymentType.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(paymentType.CreatedAt!),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando categoría", {
+			return createErrorResponse("Error creando método de pago", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -137,7 +150,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 		}
 	}
 
-	async delete(id: string): Promise<IBaseResponse<IPaymentTypeResponse | null>> {
+	async update(id: string, rq: IPaymentTypeUpdateRequest): Promise<IBaseResponse<IPaymentTypeResponse | null>> {
 		// Crear queryRunner
 		const queryRunner = this.db.createQueryRunner();
 		await queryRunner.connect();
@@ -145,14 +158,64 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 		const manager = queryRunner.manager;
 
 		try {
-			// Check if exists
-			const existingPaymentType = await this.paymentTypeRepository.getById(id);
+			const validateRq = await this.validatePaymentType(rq, queryRunner, id);
 
-			if (existingPaymentType == null) {
+			if (validateRq) return validateRq;
+
+			const prevPaymentType = await this.paymentTypeRepository.getById(Number(id));
+
+			if (!prevPaymentType) {
 				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al borrar la categoría", {
+				return createErrorResponse("Error al editar el método de pago", {
 					code: 404,
-					message: Messages.Error.EntityNotFound("Categoría", true),
+					message: Messages.Error.EntityNotFound("Método de pago"),
+				});
+			}
+
+			prevPaymentType.Name = rq.Name;
+
+			const paymentType = await this.paymentTypeRepository.update(id, prevPaymentType, manager);
+
+			if (!paymentType) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al editar el método de pago", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Método de pago"),
+				});
+			}
+
+			await queryRunner.commitTransaction();
+
+			return createSuccessResponse(Messages.CRUD.EntityUpdated("Método de pago"), {
+				id: paymentType.Id!.toString(),
+				name: paymentType.Name,
+				createdAt: formatDateToArgentina(paymentType.CreatedAt!),
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error editando método de pago", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
+
+		try {
+			if ((await this.paymentTypeRepository.existsById(id)) == null) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al borrar el método de pago", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Método de pago"),
 				});
 			}
 
@@ -162,15 +225,13 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-				id: existingPaymentType.Id!.toString(),
-				name: existingPaymentType.Name,
-				createdAt: existingPaymentType.CreatedAt!.toISOString(),
+			return createSuccessResponse(Messages.CRUD.EntityDeleted("Método de pago"), {
+				id: id!.toString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando categoría", {
+			return createErrorResponse("Error eliminando Método de pago", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -178,13 +239,4 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 			await queryRunner.release();
 		}
 	}
-
-	// 	const paymentType = await this.paymentTypeRepository.create({ name });
-	// 	return {
-	// 		message: "Categoría creada correctamente",
-	// 		data: paymentType,
-	// 		error: null,
-	// 		success: true,
-	// 	};
-	// }
 }

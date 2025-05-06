@@ -1,7 +1,14 @@
-import { IReviewCreateRequest, IReviewGetAllRequest, IReviewGetAllResponse, IReviewResponse } from "../types/IReview.js";
+import {
+	IReviewCreateRequest,
+	IReviewGetAllRequest,
+	IReviewGetAllResponse,
+	IReviewResponse,
+	IReviewUpdateRequest,
+} from "../types/IReview.js";
 import { inject, injectable } from "tsyringe";
 import { BaseController } from "./BaseController.js";
 import { ReviewService } from "../services/ReviewService.js";
+import { IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 
 @injectable()
 export class ReviewController extends BaseController<
@@ -11,7 +18,9 @@ export class ReviewController extends BaseController<
 	IReviewResponse,
 	IReviewCreateRequest,
 	IReviewResponse,
-	IReviewResponse
+	IReviewUpdateRequest,
+	IReviewResponse,
+	IGenericDeleteResponse
 > {
 	constructor(@inject("ReviewService") reviewService: ReviewService) {
 		super(reviewService);

@@ -1,28 +1,37 @@
 import { PaymentType } from "../models/database/PaymentType.js";
-import { EntityManager, IsNull, Repository } from "typeorm";
+import { FindOptionsWhere, IsNull, Like, Repository } from "typeorm";
 import { GetComboItem } from "../types/shared/IGetCombo.js";
 import { createValidOrderColumns, getAllPaginationOptions } from "../utils/RepositoryHelpers.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { inject, injectable } from "tsyringe";
+import { BaseRepository } from "./BaseRepository.js";
 
 @injectable()
-export class PaymentTypeRepository {
+export class PaymentTypeRepository extends BaseRepository<PaymentType> {
 	constructor(
 		@inject("PaymentTypeTypeORMRepository")
-		private readonly repository: Repository<PaymentType>,
-	) {}
+		private readonly paymentTypeRepository: Repository<PaymentType>,
+	) {
+		super(PaymentType, paymentTypeRepository);
+	}
 
-	getRepo = (manager?: EntityManager) => {
-		return manager ? manager.getRepository(PaymentType) : this.repository;
-	};
+	buildWhere(query: IGenericGetAllRequest): FindOptionsWhere<PaymentType> | FindOptionsWhere<PaymentType>[] {
+		const base: FindOptionsWhere<PaymentType> = { DeletedAt: IsNull() };
+
+		if (query.text) {
+			return [{ ...base, Name: Like(`%${query.text}%`) }];
+		}
+
+		return base;
+	}
 
 	async getAll(query: IGenericGetAllRequest): Promise<{ items: PaymentType[]; totalCount: number }> {
 		const validOrderColumns = createValidOrderColumns<PaymentType>(["Name", "CreatedAt"]);
 
 		const { skip, take, order } = getAllPaginationOptions<PaymentType>(query, validOrderColumns);
 
-		const [items, totalCount] = await this.repository.findAndCount({
-			where: { DeletedAt: IsNull() },
+		const [items, totalCount] = await this.paymentTypeRepository.findAndCount({
+			where: this.buildWhere(query),
 			select: { Id: true, Name: true, CreatedAt: true },
 			order,
 			skip,
@@ -32,22 +41,8 @@ export class PaymentTypeRepository {
 		return { items, totalCount };
 	}
 
-	async getById(id: string): Promise<PaymentType | null> {
-		const paymentTypeId = Number(id);
-
-		if (isNaN(paymentTypeId)) return null;
-
-		const paymentType = await this.repository.findOne({
-			where: { Id: paymentTypeId, DeletedAt: IsNull() },
-		});
-
-		if (!paymentType) return null;
-
-		return paymentType;
-	}
-
 	async getCombo(): Promise<GetComboItem[]> {
-		const categories = await this.repository.find({
+		const categories = await this.paymentTypeRepository.find({
 			select: { Id: true, Name: true },
 			where: { DeletedAt: IsNull() },
 			order: { Name: "ASC" },
@@ -57,28 +52,5 @@ export class PaymentTypeRepository {
 			id: c.Id!.toString(),
 			label: c.Name,
 		}));
-	}
-
-	async create(paymentType: PaymentType, manager?: EntityManager): Promise<PaymentType> {
-		const repo = this.getRepo(manager);
-		return await repo.save(paymentType);
-	}
-
-	// async update(id: string, data: Partial<PaymentType>): Promise<PaymentType | null> {
-	// 	const paymentType = await this.getById(id);
-	// 	if (!paymentType) return null;
-
-	// 	Object.assign(paymentType, data);
-	// 	return await this.repository.save(paymentType);
-	// }
-
-	async delete(id: string, manager?: EntityManager): Promise<boolean | null> {
-		const paymentTypeId = Number(id);
-
-		if (isNaN(paymentTypeId)) return null;
-
-		const repo = this.getRepo(manager);
-		const result = await repo.softDelete(id);
-		return result.affected !== 0;
 	}
 }

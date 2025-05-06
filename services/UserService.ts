@@ -5,8 +5,9 @@ import {
 	IUserGetComboRequest,
 	IUserRegisterResponse,
 	IUserResponse,
+	IUserUpdateRequest,
 } from "../types/IUser.js";
-import { IBaseResponse } from "../types/shared/IBaseResponse.js";
+import { IBaseResponse, IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import { UserRepository } from "../repository/UserRepository.js";
@@ -19,6 +20,7 @@ import { IGetCombo } from "../types/shared/IGetCombo.js";
 import { inject, injectable } from "tsyringe";
 import { User } from "../models/database/User.js";
 import { BaseService } from "./BaseService.js";
+import { formatDateToArgentina } from "../utils/DateFormatter.js";
 
 @injectable()
 export class UserService extends BaseService<User> {
@@ -30,7 +32,7 @@ export class UserService extends BaseService<User> {
 		super(userRepository.getRepo());
 	}
 
-	validateUser = async (rq: IUserCreateRequest, queryRunner: QueryRunner) => {
+	validateUser = async (rq: IUserCreateRequest, queryRunner: QueryRunner, id?: string) => {
 		const validationRules = [
 			{
 				condition: !rq.Username,
@@ -42,11 +44,7 @@ export class UserService extends BaseService<User> {
 				field: "email",
 				errorMessage: Messages.Error.FieldRequired("email"),
 			},
-			{
-				condition: !rq.Password,
-				field: "password",
-				errorMessage: Messages.Error.FieldRequired("contraseña"),
-			},
+
 			{
 				condition: !rq.Address,
 				field: "dirección",
@@ -64,17 +62,25 @@ export class UserService extends BaseService<User> {
 			});
 		}
 
-		// Validate Password
-		const hasUpper = /[A-Z]/.test(rq.Password);
-		const hasLower = /[a-z]/.test(rq.Password);
-		const hasDigit = /\d/.test(rq.Password);
-		const hasSymbol = /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/.test(rq.Password);
-		if (rq.Password.length < 8 || !(hasUpper && hasLower && hasDigit && hasSymbol)) {
-			await queryRunner.rollbackTransaction();
-			return createErrorResponse("Error al crear el usuario", {
-				code: 400,
-				message:
-					"La contraseña no es válida, debe contener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un caracter especial.",
+		if (!id) {
+			// Validate Password
+			const hasUpper = /[A-Z]/.test(rq.Password);
+			const hasLower = /[a-z]/.test(rq.Password);
+			const hasDigit = /\d/.test(rq.Password);
+			const hasSymbol = /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]/.test(rq.Password);
+			if (rq.Password.length < 8 || !(hasUpper && hasLower && hasDigit && hasSymbol)) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al crear el usuario", {
+					code: 400,
+					message:
+						"La contraseña no es válida, debe contener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un caracter especial.",
+				});
+			}
+
+			validationRules.push({
+				condition: !rq.Password,
+				field: "password",
+				errorMessage: Messages.Error.FieldRequired("contraseña"),
 			});
 		}
 
@@ -127,7 +133,7 @@ export class UserService extends BaseService<User> {
 				],
 			);
 
-		if (await this.existsBy("Email", rq.Email)) {
+		if (await this.userRepository.existsBy("Email", rq.Email, id)) {
 			// Not duplicated email
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
@@ -137,7 +143,7 @@ export class UserService extends BaseService<User> {
 		}
 
 		// Not duplicated username
-		if (await this.existsBy("Username", rq.Username)) {
+		if (await this.userRepository.existsBy("Username", rq.Username, id)) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
 				code: 400,
@@ -165,7 +171,7 @@ export class UserService extends BaseService<User> {
 						email: x.Email,
 						address: x.Address,
 						roles: x.Roles?.map((x) => x.Name),
-						createdAt: x.CreatedAt!.toISOString(),
+						createdAt: formatDateToArgentina(x.CreatedAt!),
 					})),
 					totalCount: users?.totalCount || 0,
 				},
@@ -183,7 +189,8 @@ export class UserService extends BaseService<User> {
 
 	async getOne(id: string): Promise<IBaseResponse<IUserResponse | null>> {
 		try {
-			const user = await this.userRepository.getById(id);
+			const user = await this.userRepository.getById(Number(id));
+
 			if (!user)
 				return createErrorResponse("Usuario no encontrado", {
 					code: 404,
@@ -200,11 +207,11 @@ export class UserService extends BaseService<User> {
 				storeDescription: user.StoreName,
 				cbu: user.Cbu,
 				cuit: user.Cuit,
-				createdAt: user.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(user.CreatedAt!),
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error creando usuario", {
+			return createErrorResponse("Error obteniendo usuario", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -240,9 +247,9 @@ export class UserService extends BaseService<User> {
 
 		try {
 			// Validate request
-			const hasError = await this.validateUser(rq, queryRunner);
+			const validateRq = await this.validateUser(rq, queryRunner);
 
-			if (hasError !== null) return hasError;
+			if (validateRq) return validateRq;
 
 			const roles = await this.roleRepository.findBy({ Id: In(rq.Roles) });
 
@@ -272,12 +279,72 @@ export class UserService extends BaseService<User> {
 				storeDescription: user.StoreName,
 				cbu: user.Cbu,
 				cuit: user.Cuit,
-				createdAt: user.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(user.CreatedAt!),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
 			return createErrorResponse("Error creando usuario", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
+	async update(id: string, rq: IUserUpdateRequest): Promise<IBaseResponse<IUserResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
+
+		try {
+			// Validate request
+			const validateRq = await this.validateUser(rq, queryRunner, id);
+
+			if (validateRq) return validateRq;
+
+			const roles = await this.roleRepository.findBy({ Id: In(rq.Roles) });
+
+			const prevUser = await this.userRepository.getById(Number(id));
+
+			if (!prevUser) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al editar el usuario", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Usuario"),
+				});
+			}
+
+			prevUser.Username = rq.Username;
+			prevUser.Email = rq.Email;
+			prevUser.Address = rq.Address;
+			prevUser.Cbu = rq.Cbu;
+			prevUser.StoreDescription = rq.StoreDescription;
+			prevUser.StoreName = rq.StoreName;
+			prevUser.Roles = roles;
+
+			await this.userRepository.update(id, prevUser, manager);
+
+			await queryRunner.commitTransaction();
+
+			return createSuccessResponse(Messages.CRUD.EntityUpdated("Usuario"), {
+				id: prevUser.Id!.toString(),
+				username: prevUser.Username,
+				email: prevUser.Email,
+				address: prevUser.Address,
+				roles: prevUser.Roles.map((x) => x.Id!.toString()),
+				storeName: prevUser.StoreName,
+				storeDescription: prevUser.StoreName,
+				cbu: prevUser.Cbu,
+				cuit: prevUser.Cuit,
+				createdAt: formatDateToArgentina(prevUser.CreatedAt!),
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error editando usuario", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});
@@ -329,7 +396,7 @@ export class UserService extends BaseService<User> {
 		}
 	}
 
-	async delete(id: string): Promise<IBaseResponse<IUserResponse | null>> {
+	async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
 		// Crear queryRunner
 		const queryRunner = this.db.createQueryRunner();
 		await queryRunner.connect();
@@ -338,9 +405,7 @@ export class UserService extends BaseService<User> {
 
 		try {
 			// Check if user exists
-			const existingUser = await this.userRepository.getById(id);
-
-			if (existingUser == null) {
+			if ((await this.userRepository.existsById(id)) == null) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al borrar el usuario", {
 					code: 404,
@@ -354,17 +419,8 @@ export class UserService extends BaseService<User> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Usuario", true), {
-				id: existingUser.Id!.toString(),
-				username: existingUser.Username,
-				email: existingUser.Email,
-				address: existingUser.Address,
-				roles: existingUser.Roles.map((x) => x.Id!.toString()),
-				storeName: existingUser.StoreName,
-				storeDescription: existingUser.StoreName,
-				cbu: existingUser.Cbu,
-				cuit: existingUser.Cuit,
-				createdAt: existingUser.CreatedAt!.toISOString(),
+			return createSuccessResponse(Messages.CRUD.EntityDeleted("Usuario"), {
+				id: id!.toString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();

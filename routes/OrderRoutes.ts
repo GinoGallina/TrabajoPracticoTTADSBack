@@ -10,8 +10,8 @@ export const OrderRouter = () => {
 	router.get("/getAll", orderController.getAll.bind(orderController));
 	router.get("/getOne/:id", orderController.getOne.bind(orderController));
 	router.post("/create", orderController.create.bind(orderController));
-	// TODO
-	// router.post("/delete/:id", orderController.delete.bind(orderController));
+	router.post("/cancelProduct/:id", orderController.cancelProduct.bind(orderController));
+	router.post("/cancelOrder/:id", orderController.cancelOrder.bind(orderController));
 
 	return router;
 };

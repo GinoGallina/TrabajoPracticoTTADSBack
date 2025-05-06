@@ -19,6 +19,9 @@ export class OrderItem extends BaseModel {
 	})
 	Status!: OrderItemEnum;
 
+	@Column({ type: "timestamp", nullable: true })
+	CanceledAt?: Date | null;
+
 	@Column({ type: "int" })
 	ProductId!: number;
 

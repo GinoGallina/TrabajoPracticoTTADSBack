@@ -1,9 +1,16 @@
 import { Request, Response } from "express";
 import { ProductService } from "../services/ProductService.js";
-import { IProductCreateRequest, IProductGetAllResponse, IProductGetOneResponse, IProductResponse } from "../types/IProduct.js";
+import {
+	IProductCreateRequest,
+	IProductGetAllResponse,
+	IProductGetOneResponse,
+	IProductResponse,
+	IProductUpdateRequest,
+} from "../types/IProduct.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { inject, injectable } from "tsyringe";
 import { BaseController } from "./BaseController.js";
+import { IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 
 @injectable()
 export class ProductController extends BaseController<
@@ -13,7 +20,9 @@ export class ProductController extends BaseController<
 	IProductGetOneResponse,
 	IProductCreateRequest,
 	IProductResponse,
-	IProductResponse
+	IProductUpdateRequest,
+	IProductResponse,
+	IGenericDeleteResponse
 > {
 	constructor(@inject("ProductService") private productService: ProductService) {
 		super(productService);

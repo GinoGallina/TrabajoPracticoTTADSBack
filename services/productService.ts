@@ -1,12 +1,11 @@
 import { DataSource, QueryRunner } from "typeorm";
 import { ProductRepository } from "../repository/ProductRepository.js";
-import { IBaseResponse } from "../types/shared/IBaseResponse.js";
+import { IBaseResponse, IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import {
 	IProductCreateRequest,
 	IProductGetAllRequest,
-	IMyProductGetAllRequest,
 	IProductGetAllResponse,
 	IProductResponse,
 	IProductGetOneResponse,
@@ -19,7 +18,9 @@ import { UserService } from "./UserService.js";
 import { injectable, inject } from "tsyringe";
 import { BaseService } from "./BaseService.js";
 import { Product } from "../models/database/Product.js";
-import { Review } from "../models/database/review.js";
+import { Review } from "../models/database/Review.js";
+import { formatDateToArgentina } from "../utils/DateFormatter.js";
+import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 
 @injectable()
 export class ProductService extends BaseService<Product> {
@@ -32,7 +33,7 @@ export class ProductService extends BaseService<Product> {
 		super(productRepository.getRepo());
 	}
 
-	validateProduct = async (rq: IProductCreateRequest, queryRunner: QueryRunner) => {
+	validateProduct = async (rq: IProductCreateRequest, queryRunner: QueryRunner, id?: string) => {
 		const validationRules = [
 			{
 				condition: !rq.Name,
@@ -62,7 +63,7 @@ export class ProductService extends BaseService<Product> {
 		if (hasError !== null) return hasError;
 
 		// Not duplicated name
-		if (await this.existsBy("Name", rq.Name)) {
+		if (await this.productRepository.existsBy("Name", rq.Name, id)) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el producto", {
 				code: 400,
@@ -96,7 +97,7 @@ export class ProductService extends BaseService<Product> {
 		return Math.max(0, Math.min(5, avgRate));
 	};
 
-	async getAllMyProducts(query: IMyProductGetAllRequest): Promise<IBaseResponse<IMyProductGetAllResponse | null>> {
+	async getAllMyProducts(query: IGenericGetAllRequest): Promise<IBaseResponse<IMyProductGetAllResponse | null>> {
 		try {
 			const products = await this.productRepository.getAllMyProducts(query);
 			return {
@@ -109,7 +110,7 @@ export class ProductService extends BaseService<Product> {
 						price: x.Price,
 						stock: x.Stock,
 						categoryName: x.Category.Name,
-						createdAt: x.CreatedAt!.toISOString(),
+						createdAt: formatDateToArgentina(x.CreatedAt!),
 					})),
 					totalCount: products?.totalCount || 0,
 				},
@@ -158,7 +159,8 @@ export class ProductService extends BaseService<Product> {
 
 	async getOne(id: string): Promise<IBaseResponse<IProductGetOneResponse | null>> {
 		try {
-			const product = await this.productRepository.getById(id);
+			const product = await this.productRepository.getById(Number(id), { relations: { Category: true, User: true } });
+
 			if (!product)
 				return createErrorResponse("Producto no encontrado", {
 					code: 404,
@@ -174,7 +176,7 @@ export class ProductService extends BaseService<Product> {
 				image: product.Image,
 				categoryId: product.Category.Id!.toString(),
 				userId: product.User.Id!.toString(),
-				createdAt: product.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(product.CreatedAt!),
 			});
 		} catch (e) {
 			console.log(e);
@@ -187,7 +189,7 @@ export class ProductService extends BaseService<Product> {
 
 	async getDetails(id: string): Promise<IBaseResponse<IProductGetDetailsResponse | null>> {
 		try {
-			const product = await this.productRepository.getById(id);
+			const product = await this.productRepository.getById(Number(id), { relations: { Category: true, User: true } });
 			if (!product)
 				return createErrorResponse("Producto no encontrado", {
 					code: 404,
@@ -228,7 +230,16 @@ export class ProductService extends BaseService<Product> {
 
 			if (hasError !== null) return hasError;
 
-			const product = await this.productRepository.create(rq, manager);
+			const productToCreate = new Product({
+				CategoryId: Number(rq.CategoryId),
+				Name: rq.Name,
+				Description: rq.Description,
+				Price: rq.Price,
+				Stock: rq.Stock,
+				Image: rq.Image,
+			});
+
+			const product = await this.productRepository.create(productToCreate, manager);
 
 			console.log(product);
 
@@ -241,7 +252,7 @@ export class ProductService extends BaseService<Product> {
 				price: product.Price,
 				stock: product.Stock,
 				image: product.Image,
-				createdAt: product.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(product.CreatedAt!),
 			});
 		} catch (e) {
 			console.log(e);
@@ -255,7 +266,61 @@ export class ProductService extends BaseService<Product> {
 		}
 	}
 
-	async delete(id: string): Promise<IBaseResponse<IProductResponse | null>> {
+	async update(id: string, rq: IProductCreateRequest): Promise<IBaseResponse<IProductResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
+
+		try {
+			const hasError = await this.validateProduct(rq, queryRunner, id);
+
+			if (hasError !== null) return hasError;
+
+			const prevProduct = await this.productRepository.getById(Number(id));
+
+			if (!prevProduct) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al editar el producto", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Producto"),
+				});
+			}
+
+			prevProduct.CategoryId = Number(rq.CategoryId);
+			prevProduct.Name = rq.Name;
+			prevProduct.Description = rq.Description;
+			prevProduct.Price = rq.Price;
+			prevProduct.Stock = rq.Stock;
+			prevProduct.Image = rq.Image;
+
+			this.productRepository.update(id, prevProduct, manager);
+
+			await queryRunner.commitTransaction();
+
+			return createSuccessResponse(Messages.CRUD.EntityCreated("Producto"), {
+				id: prevProduct.Id!,
+				name: prevProduct.Name,
+				description: prevProduct.Description,
+				price: prevProduct.Price,
+				stock: prevProduct.Stock,
+				image: prevProduct.Image,
+				createdAt: formatDateToArgentina(prevProduct.CreatedAt!),
+			});
+		} catch (e) {
+			console.log(e);
+			await queryRunner.rollbackTransaction();
+			return createErrorResponse("Error creando categoría", {
+				code: e instanceof Error ? 500 : 500,
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
 		// Crear queryRunner
 		const queryRunner = this.db.createQueryRunner();
 		await queryRunner.connect();
@@ -264,9 +329,7 @@ export class ProductService extends BaseService<Product> {
 
 		try {
 			// Check if exists
-			const existingProduct = await this.productRepository.getById(id);
-
-			if (existingProduct == null) {
+			if ((await this.productRepository.existsById(id)) == null) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al borrar el producto", {
 					code: 404,
@@ -280,14 +343,8 @@ export class ProductService extends BaseService<Product> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría"), {
-				id: existingProduct.Id!,
-				name: existingProduct.Name,
-				description: existingProduct.Description,
-				price: existingProduct.Price,
-				stock: existingProduct.Stock,
-				image: existingProduct.Image,
-				createdAt: existingProduct.CreatedAt!.toISOString(),
+			return createSuccessResponse(Messages.CRUD.EntityDeleted("Producto"), {
+				id,
 			});
 		} catch (e) {
 			console.log(e);

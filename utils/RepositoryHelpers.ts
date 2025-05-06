@@ -1,8 +1,3 @@
-// export const findValidFields = <T>(fields: Partial<T>) =>
-// 	Object.fromEntries(
-// 		Object.entries(fields).filter(([, value]) => ["string", "number", "boolean"].includes(typeof value) || value === null),
-// 	);
-
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 
 export function createValidOrderColumns<T>(columns: (keyof T)[]): Record<string, keyof T> {

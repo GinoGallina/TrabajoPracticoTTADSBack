@@ -28,8 +28,8 @@ import { OrderService } from "../services/OrderService.js";
 import { OrderController } from "../controllers/OrderController.js";
 import { ReviewController } from "../controllers/ReviewController.js";
 import { ReviewService } from "../services/ReviewService.js";
-import { ReviewRepository } from "../repository/reviewRepository.js";
-import { Review } from "../models/database/review.js";
+import { ReviewRepository } from "../repository/ReviewRepository.js";
+import { Review } from "../models/database/Review.js";
 
 export const registerInyectables = () => {
 	// Database

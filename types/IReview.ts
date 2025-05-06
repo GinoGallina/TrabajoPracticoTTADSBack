@@ -43,3 +43,9 @@ export interface IReviewCreateRequest {
 	Rate: number;
 	ProductId: string;
 }
+// Update
+export interface IReviewUpdateRequest {
+	Description: string;
+	Rate: number;
+	ProductId: string;
+}

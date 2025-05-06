@@ -1,13 +1,21 @@
-import { DataSource } from "typeorm";
-import { IReviewCreateRequest, IReviewGetAllRequest, IReviewGetAllResponse, IReviewResponse } from "../types/IReview.js";
-import { IBaseResponse } from "../types/shared/IBaseResponse.js";
+import { DataSource, QueryRunner } from "typeorm";
+import {
+	IReviewCreateRequest,
+	IReviewGetAllRequest,
+	IReviewGetAllResponse,
+	IReviewResponse,
+	IReviewUpdateRequest,
+} from "../types/IReview.js";
+import { IBaseResponse, IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import { inject, injectable } from "tsyringe";
 import { BaseService } from "./BaseService.js";
-import { Review } from "../models/database/review.js";
-import { ReviewRepository } from "../repository/reviewRepository.js";
+import { Review } from "../models/database/Review.js";
+import { ReviewRepository } from "../repository/ReviewRepository.js";
 import { AuthService } from "./AuthService.js";
+import { openai } from "../config/openai.js";
+import { formatDateToArgentina } from "../utils/DateFormatter.js";
 
 @injectable()
 export class ReviewService extends BaseService<Review> {
@@ -17,6 +25,40 @@ export class ReviewService extends BaseService<Review> {
 		@inject("AuthService") private readonly authService: AuthService,
 	) {
 		super(reviewRepository.getRepo());
+	}
+
+	async validateReview(rq: IReviewCreateRequest | IReviewUpdateRequest, queryRunner: QueryRunner) {
+		if (!rq.Description) {
+			await queryRunner.rollbackTransaction();
+			return createErrorResponse("Error al crear la reseña", {
+				code: 400,
+				message: "No puede ingresar un comentario vacío.",
+			});
+		}
+
+		if (!(0 <= rq.Rate || rq.Rate <= 5)) {
+			await queryRunner.rollbackTransaction();
+			return createErrorResponse("Error al crear la reseña", {
+				code: 400,
+				message: "La puntuación debe ser entre 1 y 5.",
+			});
+		}
+
+		// Verify comment with open ai
+		// const moderationResponse = await openai.moderations.create({
+		// 	// model: "omni-moderation-latest",
+		// 	input: rq.Description,
+		// });
+
+		// const flagged = moderationResponse.results[0].flagged;
+
+		// if (flagged) {
+		// 	await queryRunner.rollbackTransaction();
+		// 	return createErrorResponse("Contenido inapropiado", {
+		// 		code: 400,
+		// 		message: "El comentario contiene lenguaje inapropiado y no puede ser publicado.",
+		// 	});
+		// }
 	}
 
 	async getAll(query: IReviewGetAllRequest): Promise<IBaseResponse<IReviewGetAllResponse | null>> {
@@ -30,7 +72,7 @@ export class ReviewService extends BaseService<Review> {
 						description: x.Description,
 						rate: x.Rate,
 						user: x.User.Username,
-						createdAt: x.CreatedAt!.toISOString(),
+						createdAt: formatDateToArgentina(x.CreatedAt!),
 					})),
 					totalCount: reviews?.totalCount || 0,
 				},
@@ -46,28 +88,29 @@ export class ReviewService extends BaseService<Review> {
 		}
 	}
 
-	// async getOne(id: string): Promise<IBaseResponse<IReviewResponse | null>> {
-	// 	try {
-	// 		const review = await this.reviewRepository.getById(id);
-	// 		if (!review)
-	// 			return createErrorResponse("Categoría no encontrada", {
-	// 				code: 404,
-	// 				message: Messages.Error.EntityNotFound("Categoría", true),
-	// 			});
+	async getOne(id: string): Promise<IBaseResponse<IReviewResponse | null>> {
+		try {
+			const review = await this.reviewRepository.getById(Number(id));
+			if (!review)
+				return createErrorResponse("Reseña no encontrada", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Reseña", true),
+				});
 
-	// 		return createSuccessResponse("Categoría obtenida correctamente", {
-	// 			id: review.Id!.toString(),
-	// 			name: review.Name,
-	// 			createdAt: review.CreatedAt!.toISOString(),
-	// 		});
-	// 	} catch (e) {
-	// 		console.log(e);
-	// 		return createErrorResponse("Error creando comentario", {
-	// 			code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-	// 			message: "",
-	// 		});
-	// 	}
-	// }
+			return createSuccessResponse("Reseña obtenida correctamente", {
+				id: review.Id!.toString(),
+				description: review.Description,
+				rate: review.Rate,
+				createdAt: review.CreatedAt!.toISOString(),
+			});
+		} catch (e) {
+			console.log(e);
+			return createErrorResponse("Error obteniendo reseña", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		}
+	}
 
 	async create(rq: IReviewCreateRequest): Promise<IBaseResponse<IReviewResponse | null>> {
 		// Crear queryRunner
@@ -78,21 +121,37 @@ export class ReviewService extends BaseService<Review> {
 
 		try {
 			// Validate request
-			if (!rq.Description) {
-				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al crear la reseña", {
-					code: 400,
-					message: "No puede ingresar un comentario vacío.",
-				});
-			}
+			const validateRq = await this.validateReview(rq, queryRunner);
 
-			if (!(0 <= rq.Rate || rq.Rate <= 5)) {
-				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al crear la reseña", {
-					code: 400,
-					message: "La puntuación debe ser entre 1 y 5.",
-				});
-			}
+			if (validateRq) return validateRq;
+
+			////////////////////////////////
+
+			// const completion = await openai.chat.completions.create({
+			// 	model: "gpt-3.5-turbo",
+			// 	messages: [
+			// 		{
+			// 			role: "system",
+			// 			content:
+			// 				'Sos un moderador de reseñas. Tu tarea es revisar si el siguiente comentario de producto contiene lenguaje ofensivo, insultante, grosero, discriminatorio o sexual. Respondé únicamente con "aprobado" o "rechazado".',
+			// 		},
+			// 		{
+			// 			role: "user",
+			// 			content: `Comentario: "${rq.Description}"`,
+			// 		},
+			// 	],
+			// 	temperature: 0,
+			// });
+
+			// const decision = completion.choices[0].message.content?.toLowerCase();
+
+			// if (decision?.includes("rechazado")) {
+			// 	await queryRunner.rollbackTransaction();
+			// 	return createErrorResponse("Error al crear la reseña", {
+			// 		code: 400,
+			// 		message: "El comentario contiene lenguaje inapropiado y no puede ser publicado.",
+			// 	});
+			// }
 
 			const reviewToCreate = new Review({
 				Description: rq.Description,
@@ -109,7 +168,7 @@ export class ReviewService extends BaseService<Review> {
 				id: review.Id!.toString(),
 				description: review.Description,
 				rate: review.Rate,
-				createdAt: review.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(review.CreatedAt!),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -123,7 +182,54 @@ export class ReviewService extends BaseService<Review> {
 		}
 	}
 
-	async delete(id: string): Promise<IBaseResponse<IReviewResponse | null>> {
+	async update(id: string, rq: IReviewUpdateRequest): Promise<IBaseResponse<IReviewResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
+
+		try {
+			const validateRq = await this.validateReview(rq, queryRunner);
+
+			if (validateRq) return validateRq;
+
+			const prevReview = await this.reviewRepository.getById(Number(id));
+
+			if (!prevReview) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al editar la reseña", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Reseña", true),
+				});
+			}
+
+			prevReview.Description = rq.Description;
+			prevReview.Rate = rq.Rate;
+
+			this.reviewRepository.update(id, prevReview, manager);
+
+			await queryRunner.commitTransaction();
+
+			return createSuccessResponse(Messages.CRUD.EntityUpdated("Reseña", true), {
+				id: prevReview.Id!.toString(),
+				description: prevReview.Description,
+				rate: prevReview.Rate,
+				createdAt: formatDateToArgentina(prevReview.CreatedAt!),
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error creando categoría", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
 		// Crear queryRunner
 		const queryRunner = this.db.createQueryRunner();
 		await queryRunner.connect();
@@ -132,13 +238,11 @@ export class ReviewService extends BaseService<Review> {
 
 		try {
 			// Check if exists
-			const existingReview = await this.reviewRepository.getById(id);
-
-			if (existingReview == null) {
+			if ((await this.reviewRepository.existsById(id)) == null) {
 				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al borrar la comentario", {
+				return createErrorResponse("Error al borrar la reseña", {
 					code: 404,
-					message: Messages.Error.EntityNotFound("Categoría", true),
+					message: Messages.Error.EntityNotFound("Reseña", true),
 				});
 			}
 
@@ -148,16 +252,13 @@ export class ReviewService extends BaseService<Review> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-				id: existingReview.Id!.toString(),
-				description: existingReview.Description,
-				rate: existingReview.Rate,
-				createdAt: existingReview.CreatedAt!.toISOString(),
+			return createSuccessResponse(Messages.CRUD.EntityDeleted("Reseña", true), {
+				id,
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando comentario", {
+			return createErrorResponse("Error eliminando reseña", {
 				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
 				message: "",
 			});

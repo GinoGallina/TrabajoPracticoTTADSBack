@@ -3,25 +3,143 @@ import { OrderRepository } from "../repository/OrderRepository.js";
 import { IBaseResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
-import { IOrderCreateRequest, IOrderGetAllResponse, IOrderGetOneResponse, IOrderResponse, OrderEnum } from "../types/IOrder.js";
-import { PaymentTypeService } from "./PaymentTypeService.js";
-import { ProductService } from "./ProductService.js";
+import {
+	IOrderCancelOrderResponse,
+	IOrderCancelProductRequest,
+	IOrderCreateRequest,
+	IOrderGetAllResponse,
+	IOrderGetOneResponse,
+	IOrderResponse,
+	OrderEnum,
+} from "../types/IOrder.js";
 import { inject, injectable } from "tsyringe";
 import { Order } from "../models/database/Order.js";
 import { OrderItemEnum } from "../types/IOrderItem.js";
 import { AuthService } from "./AuthService.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { RoleEnum } from "../types/IRole.js";
+import { formatDateToArgentina } from "../utils/DateFormatter.js";
+import { ProductRepository } from "../repository/ProductRepository.js";
+import { PaymentTypeRepository } from "../repository/PaymentTypeRepository.js";
 
 @injectable()
 export class OrderService {
 	constructor(
 		@inject("DataSource") private readonly db: DataSource,
 		@inject("OrderRepository") private readonly orderRepository: OrderRepository,
-		@inject("ProductService") private readonly productService: ProductService,
-		@inject("PaymentTypeService") private readonly paymentTypeService: PaymentTypeService,
+		@inject("ProductRepository") private readonly productRepository: ProductRepository,
+		@inject("PaymentTypeRepository") private readonly paymentTypeRepository: PaymentTypeRepository,
 		@inject("AuthService") private readonly authService: AuthService,
 	) {}
+
+	async cancelProduct(id: string, rq: IOrderCancelProductRequest): Promise<IBaseResponse<IOrderCancelOrderResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
+
+		try {
+			// Check if exists
+			const prevOrder = await this.orderRepository.getById(Number(id), { relations: { OrderItems: true } });
+
+			if (!prevOrder) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al cancelar el producto de la orden", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Orden", true),
+				});
+			}
+
+			const orderItem = prevOrder.OrderItems.find((x) => x.ProductId === Number(rq.ProductId));
+
+			if (!orderItem) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al cancelar el producto de la orden", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Producto de la orden"),
+				});
+			}
+
+			orderItem.Status = OrderItemEnum.Canceled;
+			orderItem.CanceledAt = new Date();
+
+			if (prevOrder.OrderItems.every((x) => x.Status === OrderItemEnum.Canceled)) {
+				prevOrder.Status = OrderEnum.Canceled;
+				prevOrder.CanceledAt = new Date();
+			}
+
+			await this.orderRepository.update(id, prevOrder, manager);
+
+			await queryRunner.commitTransaction();
+
+			return createSuccessResponse("Producto cancelado de la orden correctamente.", {
+				id,
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error cancelando el producto la orden", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	async cancelOrder(id: string): Promise<IBaseResponse<IOrderCancelOrderResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
+
+		try {
+			// Check if exists
+			const prevOrder = await this.orderRepository.getById(Number(id), { relations: { OrderItems: true } });
+
+			if (!prevOrder) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al cancelar la orden", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Orden", true),
+				});
+			}
+
+			// Check every product is still pending
+			if (prevOrder.OrderItems.some((x) => x.Status !== OrderItemEnum.Pending && x.Status !== OrderItemEnum.Canceled)) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al cancelar la orden", {
+					code: 400,
+					message: "Existe al menos un producto de la orden cuyo estado NO es Pendiente, no puede cancelar la orden.",
+				});
+			}
+
+			prevOrder.Status = OrderEnum.Canceled;
+
+			prevOrder.CanceledAt = new Date();
+
+			prevOrder.OrderItems.forEach((x) => (x.Status = OrderItemEnum.Canceled));
+
+			await this.orderRepository.update(id, prevOrder, manager);
+
+			await queryRunner.commitTransaction();
+
+			return createSuccessResponse("Orden cancelada correctamente", {
+				id,
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error eliminando la orden", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
 
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IOrderGetAllResponse | null>> {
 		try {
@@ -40,7 +158,7 @@ export class OrderService {
 							quantity: y.Quantity,
 							product: y.Product?.Name || "",
 						})),
-						createdAt: x.CreatedAt!.toISOString(),
+						createdAt: formatDateToArgentina(x.CreatedAt!),
 					})),
 					totalCount: categories?.totalCount || 0,
 				},
@@ -58,7 +176,10 @@ export class OrderService {
 
 	async getOne(id: string): Promise<IBaseResponse<IOrderGetOneResponse | null>> {
 		try {
-			const order = await this.orderRepository.getById(id);
+			const order = await this.orderRepository.getById(Number(id), {
+				relations: { PaymentType: true, OrderItems: { Product: { User: true } }, User: true },
+			});
+
 			if (!order)
 				return createErrorResponse("Orden no encontrada", {
 					code: 404,
@@ -69,12 +190,15 @@ export class OrderService {
 				shippingAddress: order.ShippingAddress,
 				paymentType: order.PaymentType?.Name || "",
 				status: order.Status,
+				userId: order.User?.Id?.toString(),
 				total: order.TotalPrice,
 				user: this.authService.getToken().roles.includes(RoleEnum.Admin) ? order.User?.Username : "",
 				items: order.OrderItems.map((x) => ({
 					product: x.Product?.Name || "",
+					productId: x.Product?.Id?.toString() || "",
 					quantity: x.Quantity,
 					status: x.Status,
+					user: `${x.Product?.User.StoreName} - ${x.Product?.User.Username}`,
 					price: x.SettedPrice,
 				})),
 			});
@@ -96,7 +220,7 @@ export class OrderService {
 
 		try {
 			// Validate request
-			if (!(await this.paymentTypeService.exists(rq.PaymentTypeId))) {
+			if (!(await this.paymentTypeRepository.existsById(rq.PaymentTypeId))) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al crear la orden", {
 					code: 400,
@@ -105,12 +229,15 @@ export class OrderService {
 			}
 
 			// Check all products exist
-			const products = await this.productService.getEntities({
-				select: ["Id", "Price"],
+			const products = await this.productRepository.findAll({
+				select: {
+					Id: true,
+					Price: true,
+				},
 				where: { Id: In(rq.Items.map((x) => Number(x.ProductId))) },
 			});
 
-			if (products.length !== rq.Items.length) {
+			if (products?.items.length !== rq.Items.length) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al crear la orden", {
 					code: 400,
@@ -130,7 +257,7 @@ export class OrderService {
 
 			// Create Order
 			const totalPrice = rq.Items.reduce((acc, item) => {
-				const product = products.find((p) => p.Id === Number(item.ProductId));
+				const product = products?.items.find((p) => p.Id === Number(item.ProductId));
 				return acc + product!.Price! * item.Quantity;
 			}, 0);
 
@@ -146,7 +273,7 @@ export class OrderService {
 					Quantity: x.Quantity,
 					ProductId: Number(x.ProductId),
 					Status: OrderItemEnum.Pending,
-					SettedPrice: products.find((y) => y.Id === Number(x.ProductId))?.Price || 0,
+					SettedPrice: products?.items.find((y) => y.Id === Number(x.ProductId))?.Price || 0,
 				})),
 			});
 
@@ -156,7 +283,7 @@ export class OrderService {
 
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Orden", true), {
 				id: order.Id!.toString(),
-				createdAt: order.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(order.CreatedAt!),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -170,45 +297,41 @@ export class OrderService {
 		}
 	}
 
-	async delete(id: string): Promise<IBaseResponse<IOrderResponse | null>> {
-		// Crear queryRunner
-		const queryRunner = this.db.createQueryRunner();
-		await queryRunner.connect();
-		await queryRunner.startTransaction();
-		const manager = queryRunner.manager;
+	// async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
+	// 	// Crear queryRunner
+	// 	const queryRunner = this.db.createQueryRunner();
+	// 	await queryRunner.connect();
+	// 	await queryRunner.startTransaction();
+	// 	const manager = queryRunner.manager;
 
-		try {
-			// Check if exists
-			const existingCategory = await this.orderRepository.getById(id);
+	// 	try {
+	// 		// Check if exists
+	// 		if ((await this.orderRepository.existsById(id)) == null) {
+	// 			await queryRunner.rollbackTransaction();
+	// 			return createErrorResponse("Error al borrar la orden", {
+	// 				code: 404,
+	// 				message: Messages.Error.EntityNotFound("Orden", true),
+	// 			});
+	// 		}
 
-			if (existingCategory == null) {
-				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al borrar la categoría", {
-					code: 404,
-					message: Messages.Error.EntityNotFound("Categoría", true),
-				});
-			}
+	// 		const deleteCategoryResult = await this.orderRepository.delete(id, manager);
 
-			const deleteCategoryResult = await this.orderRepository.delete(id, manager);
+	// 		if (!deleteCategoryResult) throw new Error();
 
-			if (!deleteCategoryResult) throw new Error();
+	// 		await queryRunner.commitTransaction();
 
-			await queryRunner.commitTransaction();
-
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-				id: existingCategory.Id!.toString(),
-				// name: existingCategory.Name,
-				createdAt: existingCategory.CreatedAt!.toISOString(),
-			});
-		} catch (e) {
-			await queryRunner.rollbackTransaction();
-			console.log(e);
-			return createErrorResponse("Error eliminando categoría", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
-		} finally {
-			await queryRunner.release();
-		}
-	}
+	// 		return createSuccessResponse(Messages.CRUD.EntityDeleted("Orden", true), {
+	// 			id,
+	// 		});
+	// 	} catch (e) {
+	// 		await queryRunner.rollbackTransaction();
+	// 		console.log(e);
+	// 		return createErrorResponse("Error eliminando la orden", {
+	// 			code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+	// 			message: "",
+	// 		});
+	// 	} finally {
+	// 		await queryRunner.release();
+	// 	}
+	// }
 }

@@ -16,3 +16,8 @@ export interface ICategoryResponse {
 export interface ICategoryCreateRequest {
 	Name: string;
 }
+
+// Update
+export interface ICategoryUpdateRequest {
+	Name: string;
+}

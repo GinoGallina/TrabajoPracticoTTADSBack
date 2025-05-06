@@ -8,6 +8,8 @@ export class BaseController<
 		TGetOneResponse,
 		TCreateRequest,
 		TCreateResponse,
+		TUpdateRequest,
+		TUpdateResponse,
 		TDeleteResponse
 	>,
 	TQueryGetAll,
@@ -15,6 +17,8 @@ export class BaseController<
 	TGetOneResponse,
 	TCreateRequest,
 	TCreateResponse,
+	TUpdateRequest,
+	TUpdateResponse,
 	TDeleteResponse,
 > {
 	constructor(protected readonly service: TService) {}
@@ -31,6 +35,11 @@ export class BaseController<
 
 	create = async (req: Request<object, object, TCreateRequest>, res: Response) => {
 		const response = await this.service.create(req.body);
+		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
+	};
+
+	update = async (req: Request<{ id: string }, object, TUpdateRequest>, res: Response) => {
+		const response = await this.service.update(req.params.id, req.body);
 		res.status(response.success ? 201 : (response.error?.code ?? 500)).json(response);
 	};
 

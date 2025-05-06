@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/UserService.js";
-import { IUserCreateRequest, IUserGetAllResponse, IUserGetComboRequest, IUserResponse } from "../types/IUser.js";
+import { IUserCreateRequest, IUserGetAllResponse, IUserGetComboRequest, IUserResponse, IUserUpdateRequest } from "../types/IUser.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { inject, injectable } from "tsyringe";
 import { BaseController } from "./BaseController.js";
+import { IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 
 @injectable()
 export class UserController extends BaseController<
@@ -13,7 +14,9 @@ export class UserController extends BaseController<
 	IUserResponse,
 	IUserCreateRequest,
 	IUserResponse,
-	IUserResponse
+	IUserUpdateRequest,
+	IUserResponse,
+	IGenericDeleteResponse
 > {
 	constructor(@inject("UserService") private userService: UserService) {
 		super(userService);

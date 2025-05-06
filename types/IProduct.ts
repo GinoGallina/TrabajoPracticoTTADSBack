@@ -2,9 +2,7 @@ import { IGenericGetAllRequest } from "./shared/IBaseRequest.js";
 import { IGenericGetAllResponse } from "./shared/IBaseResponse.js";
 
 // Get All My Products
-export interface IMyProductGetAllRequest extends IGenericGetAllRequest {
-	userId?: string;
-}
+
 export interface IMyProductGetAllResponse extends IGenericGetAllResponse {
 	products: {
 		id: string;
@@ -22,7 +20,7 @@ export interface IProductGetAllRequest extends IGenericGetAllRequest {
 	categoryIds?: string[];
 	available?: string;
 	price?: number;
-	lessThan?: boolean;
+	priceOption?: string;
 }
 
 export interface IProductGetAllResponse extends IGenericGetAllResponse {
@@ -80,6 +78,16 @@ export interface IProductResponse {
 
 // Create
 export interface IProductCreateRequest {
+	Name: string;
+	Description: string;
+	Price: number;
+	Stock: number;
+	Image?: string;
+	CategoryId: string;
+	UserId: string;
+}
+// Update
+export interface IProductUpdateRequest {
 	Name: string;
 	Description: string;
 	Price: number;

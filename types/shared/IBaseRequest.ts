@@ -3,4 +3,5 @@ export interface IGenericGetAllRequest<> {
 	page?: number;
 	columnSort?: string;
 	sortDirection?: "asc" | "desc";
+	text?: string;
 }

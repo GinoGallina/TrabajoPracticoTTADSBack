@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { CategoryService } from "../services/CategoryService.js";
-import { ICategoryCreateRequest, ICategoryGetAllResponse, ICategoryResponse } from "../types/ICategory.js";
+import { ICategoryCreateRequest, ICategoryGetAllResponse, ICategoryResponse, ICategoryUpdateRequest } from "../types/ICategory.js";
 import { inject, injectable } from "tsyringe";
 import { BaseController } from "./BaseController.js";
 import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
+import { IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 
 @injectable()
 export class CategoryController extends BaseController<
@@ -13,7 +14,9 @@ export class CategoryController extends BaseController<
 	ICategoryResponse,
 	ICategoryCreateRequest,
 	ICategoryResponse,
-	ICategoryResponse
+	ICategoryUpdateRequest,
+	ICategoryResponse,
+	IGenericDeleteResponse
 > {
 	constructor(@inject("CategoryService") private categoryService: CategoryService) {
 		super(categoryService);

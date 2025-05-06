@@ -1,7 +1,7 @@
-import { DataSource } from "typeorm";
+import { DataSource, QueryRunner } from "typeorm";
 import { CategoryRepository } from "../repository/CategoryRepository.js";
-import { ICategoryCreateRequest, ICategoryGetAllResponse, ICategoryResponse } from "../types/ICategory.js";
-import { IBaseResponse } from "../types/shared/IBaseResponse.js";
+import { ICategoryCreateRequest, ICategoryGetAllResponse, ICategoryResponse, ICategoryUpdateRequest } from "../types/ICategory.js";
+import { IBaseResponse, IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import { IGetCombo } from "../types/shared/IGetCombo.js";
@@ -9,6 +9,7 @@ import { IGenericGetAllRequest } from "../types/shared/IBaseRequest.js";
 import { inject, injectable } from "tsyringe";
 import { Category } from "../models/database/Category.js";
 import { BaseService } from "./BaseService.js";
+import { formatDateToArgentina } from "../utils/DateFormatter.js";
 
 @injectable()
 export class CategoryService extends BaseService<Category> {
@@ -17,6 +18,26 @@ export class CategoryService extends BaseService<Category> {
 		@inject("CategoryRepository") private readonly categoryRepository: CategoryRepository,
 	) {
 		super(categoryRepository.getRepo());
+	}
+
+	async validateCategory(rq: ICategoryUpdateRequest | ICategoryCreateRequest, queryRunner: QueryRunner, id?: string) {
+		// Validate request
+		if (!rq.Name) {
+			await queryRunner.rollbackTransaction();
+			return createErrorResponse("Error al crear la categoría", {
+				code: 400,
+				message: Messages.Error.FieldRequired("nombre"),
+			});
+		}
+
+		// Not duplicated name
+		if (await this.categoryRepository.existsBy("Name", rq.Name, id)) {
+			await queryRunner.rollbackTransaction();
+			return createErrorResponse("Error al crear la categoría", {
+				code: 400,
+				message: Messages.Error.UniqueField("nombre"),
+			});
+		}
 	}
 
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<ICategoryGetAllResponse | null>> {
@@ -28,7 +49,7 @@ export class CategoryService extends BaseService<Category> {
 					categories: categories.items.map((x) => ({
 						id: x.Id!.toString(),
 						name: x.Name,
-						createdAt: x.CreatedAt!.toISOString(),
+						createdAt: formatDateToArgentina(x.CreatedAt!),
 					})),
 					totalCount: categories?.totalCount || 0,
 				},
@@ -46,7 +67,7 @@ export class CategoryService extends BaseService<Category> {
 
 	async getOne(id: string): Promise<IBaseResponse<ICategoryResponse | null>> {
 		try {
-			const category = await this.categoryRepository.getById(id);
+			const category = await this.categoryRepository.getById(Number(id));
 			if (!category)
 				return createErrorResponse("Categoría no encontrada", {
 					code: 404,
@@ -56,7 +77,7 @@ export class CategoryService extends BaseService<Category> {
 			return createSuccessResponse("Categoría obtenida correctamente", {
 				id: category.Id!.toString(),
 				name: category.Name,
-				createdAt: category.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(category.CreatedAt!),
 			});
 		} catch (e) {
 			console.log(e);
@@ -94,23 +115,9 @@ export class CategoryService extends BaseService<Category> {
 		const manager = queryRunner.manager;
 
 		try {
-			// Validate request
-			if (!rq.Name) {
-				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al crear la categoría", {
-					code: 400,
-					message: Messages.Error.FieldRequired("nombre"),
-				});
-			}
+			const validateRq = await this.validateCategory(rq, queryRunner);
 
-			// Not duplicated name
-			if (await this.existsBy("Name", rq.Name)) {
-				await queryRunner.rollbackTransaction();
-				return createErrorResponse("Error al crear la categoría", {
-					code: 400,
-					message: Messages.Error.UniqueField("nombre"),
-				});
-			}
+			if (validateRq) return validateRq;
 
 			const categoryToCreate = new Category({
 				Name: rq.Name,
@@ -123,7 +130,7 @@ export class CategoryService extends BaseService<Category> {
 			return createSuccessResponse(Messages.CRUD.EntityCreated("Categoría", true), {
 				id: category.Id!.toString(),
 				name: category.Name,
-				createdAt: category.CreatedAt!.toISOString(),
+				createdAt: formatDateToArgentina(category.CreatedAt!),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
@@ -137,7 +144,52 @@ export class CategoryService extends BaseService<Category> {
 		}
 	}
 
-	async delete(id: string): Promise<IBaseResponse<ICategoryResponse | null>> {
+	async update(id: string, rq: ICategoryCreateRequest): Promise<IBaseResponse<ICategoryResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
+
+		try {
+			const validateRq = await this.validateCategory(rq, queryRunner, id);
+
+			if (validateRq) return validateRq;
+
+			const prevCategory = await this.categoryRepository.getById(Number(id));
+
+			if (!prevCategory) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al editar la categoría", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Categoría", true),
+				});
+			}
+
+			prevCategory.Name = rq.Name;
+
+			this.categoryRepository.update(id, prevCategory, manager);
+
+			await queryRunner.commitTransaction();
+
+			return createSuccessResponse(Messages.CRUD.EntityUpdated("Categoría", true), {
+				id: prevCategory.Id!.toString(),
+				name: prevCategory.Name,
+				createdAt: formatDateToArgentina(prevCategory.CreatedAt!),
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error creando categoría", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
+
+	async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
 		// Crear queryRunner
 		const queryRunner = this.db.createQueryRunner();
 		await queryRunner.connect();
@@ -146,9 +198,7 @@ export class CategoryService extends BaseService<Category> {
 
 		try {
 			// Check if exists
-			const existingCategory = await this.categoryRepository.getById(id);
-
-			if (existingCategory == null) {
+			if ((await this.categoryRepository.existsById(id)) == null) {
 				await queryRunner.rollbackTransaction();
 				return createErrorResponse("Error al borrar la categoría", {
 					code: 404,
@@ -163,9 +213,7 @@ export class CategoryService extends BaseService<Category> {
 			await queryRunner.commitTransaction();
 
 			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
-				id: existingCategory.Id!.toString(),
-				name: existingCategory.Name,
-				createdAt: existingCategory.CreatedAt!.toISOString(),
+				id,
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
