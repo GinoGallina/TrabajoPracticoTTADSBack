@@ -1,6 +1,6 @@
 import { DataSource, In } from "typeorm";
 import { OrderRepository } from "../repository/OrderRepository.js";
-import { IBaseResponse } from "../types/shared/IBaseResponse.js";
+import { IBaseResponse, IGenericDeleteResponse } from "../types/shared/IBaseResponse.js";
 import { createErrorResponse, createSuccessResponse } from "../utils/ResponseHelpers.js";
 import { Messages } from "../const/Messages.js";
 import {
@@ -298,41 +298,41 @@ export class OrderService {
 	}
 
 	// TODO
-	// async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
-	// 	// Crear queryRunner
-	// 	const queryRunner = this.db.createQueryRunner();
-	// 	await queryRunner.connect();
-	// 	await queryRunner.startTransaction();
-	// 	const manager = queryRunner.manager;
+	async delete(id: string): Promise<IBaseResponse<IGenericDeleteResponse | null>> {
+		// Crear queryRunner
+		const queryRunner = this.db.createQueryRunner();
+		await queryRunner.connect();
+		await queryRunner.startTransaction();
+		const manager = queryRunner.manager;
 
-	// 	try {
-	// 		// Check if exists
-	// 		if ((await this.orderRepository.existsById(id)) == null) {
-	// 			await queryRunner.rollbackTransaction();
-	// 			return createErrorResponse("Error al borrar la orden", {
-	// 				code: 404,
-	// 				message: Messages.Error.EntityNotFound("Orden", true),
-	// 			});
-	// 		}
+		try {
+			// Check if exists
+			if ((await this.orderRepository.existsById(id)) == null) {
+				await queryRunner.rollbackTransaction();
+				return createErrorResponse("Error al borrar la orden", {
+					code: 404,
+					message: Messages.Error.EntityNotFound("Orden", true),
+				});
+			}
 
-	// 		const deleteCategoryResult = await this.orderRepository.delete(id, manager);
+			const deleteOrderResult = await this.orderRepository.delete(id, manager);
 
-	// 		if (!deleteCategoryResult) throw new Error();
+			if (!deleteOrderResult) throw new Error();
 
-	// 		await queryRunner.commitTransaction();
+			await queryRunner.commitTransaction();
 
-	// 		return createSuccessResponse(Messages.CRUD.EntityDeleted("Orden", true), {
-	// 			id,
-	// 		});
-	// 	} catch (e) {
-	// 		await queryRunner.rollbackTransaction();
-	// 		console.log(e);
-	// 		return createErrorResponse("Error eliminando la orden", {
-	// 			code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-	// 			message: "",
-	// 		});
-	// 	} finally {
-	// 		await queryRunner.release();
-	// 	}
-	// }
+			return createSuccessResponse(Messages.CRUD.EntityDeleted("Orden", true), {
+				id,
+			});
+		} catch (e) {
+			await queryRunner.rollbackTransaction();
+			console.log(e);
+			return createErrorResponse("Error eliminando la orden", {
+				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
+				message: "",
+			});
+		} finally {
+			await queryRunner.release();
+		}
+	}
 }

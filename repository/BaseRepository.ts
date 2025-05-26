@@ -25,14 +25,11 @@ export class BaseRepository<T extends BaseModel> {
 			includeDeleted?: boolean;
 			select?: FindOptionsSelect<T>;
 			relations?: FindOptionsRelations<T>;
-			manager?: EntityManager;
 		},
 	): Promise<T | null> {
-		const repo = this.getRepo(options?.manager);
-
 		const finalWhere = options?.includeDeleted ? { Id: id } : { Id: id, DeletedAt: IsNull() };
 
-		return await repo.findOne({
+		return await this.repository.findOne({
 			where: finalWhere as FindOptionsWhere<T>,
 			select: options?.select && { ...options.select, Id: true },
 			relations: options?.relations,
@@ -45,14 +42,11 @@ export class BaseRepository<T extends BaseModel> {
 			includeDeleted?: boolean;
 			select?: FindOptionsSelect<T>;
 			relations?: FindOptionsRelations<T>;
-			manager?: EntityManager;
 		},
 	): Promise<T | null> {
-		const repo = this.getRepo(options?.manager);
-
 		const finalWhere = options?.includeDeleted ? where : { ...where, DeletedAt: IsNull() };
 
-		return await repo.findOne({
+		return await this.repository.findOne({
 			where: finalWhere,
 			select: options?.select && { ...options.select, Id: true },
 			relations: options?.relations,
@@ -67,13 +61,10 @@ export class BaseRepository<T extends BaseModel> {
 		order?: FindOptionsOrder<T>;
 		skip?: number;
 		take?: number;
-		manager?: EntityManager;
 	}): Promise<{ items: T[]; totalCount: number }> {
-		const repo = this.getRepo(options?.manager);
-
 		const finalWhere = options?.includeDeleted ? options?.where : { ...options?.where, DeletedAt: IsNull() };
 
-		const [items, totalCount] = await repo.findAndCount({
+		const [items, totalCount] = await this.repository.findAndCount({
 			where: finalWhere as FindOptionsWhere<T>,
 			select: options?.select,
 			relations: options?.relations,
@@ -88,9 +79,9 @@ export class BaseRepository<T extends BaseModel> {
 	async existsById(stringId: string, stringExcludeId?: string): Promise<boolean> {
 		const id = Number(stringId);
 
-		const excludeId = stringExcludeId ? Number(stringExcludeId) : null;
+		if (isNaN(id) || (stringExcludeId && isNaN(Number(stringExcludeId)))) return false;
 
-		if (isNaN(id) || (excludeId && isNaN(excludeId))) return false;
+		const excludeId = Number(stringExcludeId);
 
 		const qb = this.repository.createQueryBuilder("entity").where("entity.Id = :id", { id }).andWhere("entity.DeletedAt IS NULL");
 

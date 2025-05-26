@@ -69,12 +69,12 @@ export class CategoryService extends BaseService<Category> {
 		try {
 			const category = await this.categoryRepository.getById(Number(id));
 			if (!category)
-				return createErrorResponse("Categoría no encontrada", {
+				return createErrorResponse("Categoría no encontrada.", {
 					code: 404,
 					message: Messages.Error.EntityNotFound("Categoría", true),
 				});
 
-			return createSuccessResponse("Categoría obtenida correctamente", {
+			return createSuccessResponse("Categoría obtenida correctamente.", {
 				id: category.Id!.toString(),
 				name: category.Name,
 				createdAt: formatDateToArgentina(category.CreatedAt!),

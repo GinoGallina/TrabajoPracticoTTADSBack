@@ -8,7 +8,7 @@ export class Category extends BaseModel {
 	Name!: string;
 
 	@OneToMany(() => Product, (product) => product.Category)
-	Products!: Product[];
+	Products?: Product[];
 
 	constructor(init?: Partial<Category>) {
 		super();
