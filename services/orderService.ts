@@ -73,16 +73,13 @@ export class OrderService {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse("Producto cancelado de la orden correctamente.", {
+			return createSuccessResponse<IOrderCancelOrderResponse>("Producto cancelado de la orden correctamente.", {
 				id,
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error cancelando el producto la orden", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error cancelando el producto la orden");
 		} finally {
 			await queryRunner.release();
 		}
@@ -126,16 +123,13 @@ export class OrderService {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse("Orden cancelada correctamente", {
+			return createSuccessResponse<IOrderCancelOrderResponse>("Orden cancelada correctamente", {
 				id,
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando la orden", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error eliminando la orden");
 		} finally {
 			await queryRunner.release();
 		}
@@ -144,10 +138,10 @@ export class OrderService {
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IOrderGetAllResponse | null>> {
 		try {
 			const categories = await this.orderRepository.getAll(query);
-			return {
-				message: "",
-				data: {
-					orders: categories.items.map((x) => ({
+
+			const mappedCategories = categories.items.map(
+				(x) =>
+					({
 						id: x.Id!.toString(),
 						status: x.Status,
 						paymentType: x.PaymentType?.Name || "",
@@ -159,7 +153,12 @@ export class OrderService {
 							product: y.Product?.Name || "",
 						})),
 						createdAt: formatDateToArgentina(x.CreatedAt!),
-					})),
+					}) satisfies IOrderGetAllResponse["orders"][number],
+			);
+			return {
+				message: "",
+				data: {
+					orders: mappedCategories,
 					totalCount: categories?.totalCount || 0,
 				},
 				error: null,
@@ -167,10 +166,7 @@ export class OrderService {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo las ordenes", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo las ordenes");
 		}
 	}
 
@@ -186,13 +182,13 @@ export class OrderService {
 					message: Messages.Error.EntityNotFound("Orden", true),
 				});
 
-			return createSuccessResponse("Orden obtenida correctamente", {
+			return createSuccessResponse<IOrderGetOneResponse>("Orden obtenida correctamente", {
 				shippingAddress: order.ShippingAddress,
 				paymentType: order.PaymentType?.Name || "",
 				status: order.Status,
 				userId: order.User?.Id?.toString(),
 				total: order.TotalPrice,
-				user: this.authService.getToken().roles.includes(RoleEnum.Admin) ? order.User?.Username : "",
+				user: this.authService.getToken().roles.includes(RoleEnum.Admin) ? (order.User?.Username ?? "") : "",
 				items: order.OrderItems.map((x) => ({
 					product: x.Product?.Name || "",
 					productId: x.Product?.Id?.toString() || "",
@@ -204,10 +200,7 @@ export class OrderService {
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo orden", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo orden");
 		}
 	}
 
@@ -288,10 +281,7 @@ export class OrderService {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando la orden", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando la orden");
 		} finally {
 			await queryRunner.release();
 		}
@@ -321,16 +311,13 @@ export class OrderService {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Orden", true), {
+			return createSuccessResponse<IGenericDeleteResponse>(Messages.CRUD.EntityDeleted("Orden", true), {
 				id,
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando la orden", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error eliminando la orden");
 		} finally {
 			await queryRunner.release();
 		}

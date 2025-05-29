@@ -67,7 +67,7 @@ export class ProductService extends BaseService<Product> {
 		// Not duplicated name
 		if (await this.productRepository.existsBy("Name", rq.Name, id)) {
 			await queryRunner.rollbackTransaction();
-			return createErrorResponse("Error al crear el producto", {
+			return createErrorResponse(`Error al ${id ? "editar" : "crear"} el producto`, {
 				code: 400,
 				message: Messages.Error.UniqueField("nombre"),
 			});
@@ -75,7 +75,7 @@ export class ProductService extends BaseService<Product> {
 		// Valid category
 		if ((await this.categoryService.getOne(rq.CategoryId))?.data == null) {
 			await queryRunner.rollbackTransaction();
-			return createErrorResponse("Error al crear el producto", {
+			return createErrorResponse(`Error al ${id ? "editar" : "crear"} el producto`, {
 				code: 404,
 				message: Messages.Error.EntityNotFound("Categoría", true),
 			});
@@ -83,7 +83,7 @@ export class ProductService extends BaseService<Product> {
 		// Valid user
 		if ((await this.userService.getOne(rq.UserId))?.data == null) {
 			await queryRunner.rollbackTransaction();
-			return createErrorResponse("Error al crear el producto", {
+			return createErrorResponse(`Error al ${id ? "editar" : "crear"} el producto`, {
 				code: 404,
 				message: Messages.Error.EntityNotFound("Usuario", true),
 			});
@@ -102,18 +102,24 @@ export class ProductService extends BaseService<Product> {
 	async getAllMyProducts(query: IGenericGetAllRequest): Promise<IBaseResponse<IMyProductGetAllResponse | null>> {
 		try {
 			const products = await this.productRepository.getAllMyProducts(query);
+
+			const mappedProducts = products.items.map(
+				(x) =>
+					({
+						id: x.Id!.toString(),
+						name: x.Name,
+						categoryName: x.Category.Name,
+						user: x.User.Username,
+						price: x.Price,
+						stock: x.Stock,
+						createdAt: formatDateToArgentina(x.CreatedAt!),
+					}) satisfies IMyProductGetAllResponse["products"][number],
+			);
+
 			return {
 				message: "",
 				data: {
-					products: products.items.map((x) => ({
-						id: x.Id!.toString(),
-						name: x.Name,
-						description: x.Description,
-						price: x.Price,
-						stock: x.Stock,
-						categoryName: x.Category.Name,
-						createdAt: formatDateToArgentina(x.CreatedAt!),
-					})),
+					products: mappedProducts,
 					totalCount: products?.totalCount || 0,
 				},
 				error: null,
@@ -131,10 +137,10 @@ export class ProductService extends BaseService<Product> {
 	async getAll(query: IProductGetAllRequest): Promise<IBaseResponse<IProductGetAllResponse | null>> {
 		try {
 			const products = await this.productRepository.getAll(query);
-			return {
-				message: "",
-				data: {
-					products: products.items.map((x) => ({
+
+			const mappedProducts = products.items.map(
+				(x) =>
+					({
 						id: x.Id!.toString(),
 						name: x.Name,
 						price: x.Price,
@@ -145,7 +151,13 @@ export class ProductService extends BaseService<Product> {
 							rate: this.getRate(x.Reviews),
 							totalReviews: x.Reviews.length,
 						},
-					})),
+					}) satisfies IProductGetAllResponse["products"][number],
+			);
+
+			return {
+				message: "",
+				data: {
+					products: mappedProducts,
 					totalCount: products?.totalCount || 0,
 				},
 				error: null,
@@ -162,7 +174,9 @@ export class ProductService extends BaseService<Product> {
 
 	async getOne(id: string): Promise<IBaseResponse<IProductGetOneResponse | null>> {
 		try {
-			const product = await this.productRepository.getById(Number(id), { relations: { Category: true, User: true } });
+			const product = await this.productRepository.getById(Number(id), {
+				relations: { Category: true, User: true, Reviews: true },
+			});
 
 			if (!product)
 				return createErrorResponse("Producto no encontrado", {
@@ -170,7 +184,7 @@ export class ProductService extends BaseService<Product> {
 					message: Messages.Error.EntityNotFound("Producto"),
 				});
 
-			return createSuccessResponse("Producto obtenido correctamente", {
+			return createSuccessResponse<IProductGetOneResponse>("Producto obtenido correctamente", {
 				id: product.Id!,
 				name: product.Name,
 				description: product.Description,
@@ -179,6 +193,10 @@ export class ProductService extends BaseService<Product> {
 				image: product.Image,
 				categoryId: product.Category.Id!.toString(),
 				userId: product.User.Id!.toString(),
+				rating: {
+					rate: this.getRate(product.Reviews),
+					totalReviews: product.Reviews.length,
+				},
 				createdAt: formatDateToArgentina(product.CreatedAt!),
 			});
 		} catch (e) {
@@ -192,20 +210,26 @@ export class ProductService extends BaseService<Product> {
 
 	async getDetails(id: string): Promise<IBaseResponse<IProductGetDetailsResponse | null>> {
 		try {
-			const product = await this.productRepository.getById(Number(id), { relations: { Category: true, User: true } });
+			const product = await this.productRepository.getById(Number(id), {
+				relations: { Category: true, User: true, Reviews: true },
+			});
 			if (!product)
 				return createErrorResponse("Producto no encontrado", {
 					code: 404,
 					message: Messages.Error.EntityNotFound("Producto"),
 				});
 
-			return createSuccessResponse("Producto obtenido correctamente", {
+			return createSuccessResponse<IProductGetDetailsResponse>("Producto obtenido correctamente", {
 				name: product.Name,
 				description: product.Description,
 				price: product.Price,
 				stock: product.Stock,
 				image: product.Image,
 				categoryName: product.Category.Name,
+				rating: {
+					rate: this.getRate(product.Reviews),
+					totalReviews: product.Reviews.length,
+				},
 				sellerDetails: {
 					userName: product.User.Username,
 					storeDescription: product.User.StoreDescription || "",
@@ -249,7 +273,7 @@ export class ProductService extends BaseService<Product> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Producto"), {
+			return createSuccessResponse<IProductResponse>(Messages.CRUD.EntityCreated("Producto"), {
 				id: product.Id!,
 				name: product.Name,
 				description: product.Description,
@@ -293,6 +317,7 @@ export class ProductService extends BaseService<Product> {
 			}
 
 			prevProduct.CategoryId = Number(rq.CategoryId);
+			prevProduct.UserId = Number(rq.UserId);
 			prevProduct.Name = rq.Name;
 			prevProduct.Description = rq.Description;
 			prevProduct.Price = rq.Price;
@@ -303,7 +328,7 @@ export class ProductService extends BaseService<Product> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Producto"), {
+			return createSuccessResponse<IProductResponse>(Messages.CRUD.EntityCreated("Producto"), {
 				id: prevProduct.Id!,
 				name: prevProduct.Name,
 				description: prevProduct.Description,
@@ -347,7 +372,7 @@ export class ProductService extends BaseService<Product> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Producto"), {
+			return createSuccessResponse<IGenericDeleteResponse>(Messages.CRUD.EntityDeleted("Producto"), {
 				id,
 			});
 		} catch (e) {

@@ -13,8 +13,10 @@ export interface IOrderGetAllResponse extends IGenericGetAllResponse {
 	orders: {
 		id: string;
 		paymentType: string;
+		status: OrderEnum;
 		user?: string;
 		shippingAddress: string;
+		totalAmount: number;
 		createdAt: string;
 		items: { product: string; quantity: number }[];
 	}[];
@@ -26,6 +28,8 @@ export interface IOrderGetOneResponse {
 	userId?: string;
 	shippingAddress: string;
 	total: number;
+	status: OrderEnum;
+	user: string;
 	items: {
 		product: string;
 		productId: string;

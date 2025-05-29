@@ -12,6 +12,7 @@ export interface IReviewGetAllResponse extends IGenericGetAllResponse {
 		description: string;
 		rate: number;
 		user: string;
+		userId: number;
 		createdAt: string;
 	}[];
 }

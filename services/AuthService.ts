@@ -87,7 +87,7 @@ export class AuthService {
 				user.data.username,
 			);
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Usuario", true), {
+			return createSuccessResponse<IRegisterResponse>(Messages.CRUD.EntityCreated("Usuario", true), {
 				user: {
 					id: user.data.id,
 					roles: user.data.roles,
@@ -101,10 +101,7 @@ export class AuthService {
 		} catch (e) {
 			console.log(e);
 			await queryRunner.rollbackTransaction();
-			return createErrorResponse("Error inesperado registrando al usuario", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error inesperado registrando al usuario");
 		}
 	}
 
@@ -143,7 +140,7 @@ export class AuthService {
 				user.Username,
 			);
 
-			return createSuccessResponse("Inicio de sesión correcto", {
+			return createSuccessResponse<ILoginResponse>("Inicio de sesión correcto", {
 				user: {
 					id: user.Id!.toString(),
 					roles: user.Roles.map((x) => x.Name),
@@ -156,10 +153,7 @@ export class AuthService {
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error inesperado al hacer login", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error inesperado al hacer login");
 		}
 	}
 }

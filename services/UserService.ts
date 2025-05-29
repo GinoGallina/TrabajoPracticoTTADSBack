@@ -53,7 +53,7 @@ export class UserService extends BaseService<User> {
 		];
 
 		// Validate Email
-		const regex = /^[^\s@]+@[^\s@]+(\.[^\s@]+)?$/;
+		const regex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 		if (!regex.test(rq.Email)) {
 			await queryRunner.rollbackTransaction();
 			return createErrorResponse("Error al crear el usuario", {
@@ -124,12 +124,6 @@ export class UserService extends BaseService<User> {
 						field: "cbu",
 						errorMessage: Messages.Error.FieldRequired("cbu"),
 					},
-					// TODO
-					// {
-					// 	condition: !rq.Cuit,
-					// 	field: "cuit",
-					// 	errorMessage: Messages.Error.FieldRequired("cuit"),
-					// },
 				],
 			);
 
@@ -162,17 +156,23 @@ export class UserService extends BaseService<User> {
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IUserGetAllResponse | null>> {
 		try {
 			const users = await this.userRepository.getAll(query);
-			return {
-				message: "",
-				data: {
-					users: users.items.map((x) => ({
+
+			const mappedUsers = users.items.map(
+				(x) =>
+					({
 						id: x.Id!.toString(),
 						username: x.Username,
 						email: x.Email,
 						address: x.Address,
 						roles: x.Roles?.map((x) => x.Name),
 						createdAt: formatDateToArgentina(x.CreatedAt!),
-					})),
+					}) satisfies IUserGetAllResponse["users"][number],
+			);
+
+			return {
+				message: "",
+				data: {
+					users: mappedUsers,
 					totalCount: users?.totalCount || 0,
 				},
 				error: null,
@@ -180,10 +180,7 @@ export class UserService extends BaseService<User> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo usuarios", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo usuarios");
 		}
 	}
 
@@ -197,7 +194,7 @@ export class UserService extends BaseService<User> {
 					message: Messages.Error.EntityNotFound("Usuario"),
 				});
 
-			return createSuccessResponse("Usuario obtenido correctamente", {
+			return createSuccessResponse<IUserResponse>("Usuario obtenido correctamente", {
 				id: user.Id!.toString(),
 				username: user.Username,
 				email: user.Email,
@@ -211,10 +208,7 @@ export class UserService extends BaseService<User> {
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo usuario", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo usuario");
 		}
 	}
 
@@ -231,10 +225,7 @@ export class UserService extends BaseService<User> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo combo de usuarios", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo combo de usuarios");
 		}
 	}
 
@@ -269,7 +260,7 @@ export class UserService extends BaseService<User> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Usuario"), {
+			return createSuccessResponse<IUserResponse>(Messages.CRUD.EntityCreated("Usuario"), {
 				id: user.Id!.toString(),
 				username: user.Username,
 				email: user.Email,
@@ -284,10 +275,7 @@ export class UserService extends BaseService<User> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando usuario", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando usuario");
 		} finally {
 			await queryRunner.release();
 		}
@@ -329,7 +317,7 @@ export class UserService extends BaseService<User> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityUpdated("Usuario"), {
+			return createSuccessResponse<IUserResponse>(Messages.CRUD.EntityUpdated("Usuario"), {
 				id: prevUser.Id!.toString(),
 				username: prevUser.Username,
 				email: prevUser.Email,
@@ -344,10 +332,7 @@ export class UserService extends BaseService<User> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error editando usuario", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error editando usuario");
 		} finally {
 			await queryRunner.release();
 		}
@@ -380,7 +365,7 @@ export class UserService extends BaseService<User> {
 
 			const user = await this.userRepository.create(userToCreate, manager);
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Usuario"), {
+			return createSuccessResponse<IUserRegisterResponse>(Messages.CRUD.EntityCreated("Usuario"), {
 				id: user.Id!.toString(),
 				username: user.Username,
 				email: user.Email,
@@ -419,16 +404,13 @@ export class UserService extends BaseService<User> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Usuario"), {
+			return createSuccessResponse<IGenericDeleteResponse>(Messages.CRUD.EntityDeleted("Usuario"), {
 				id: id!.toString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando usuario", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error eliminando usuario");
 		} finally {
 			await queryRunner.release();
 		}

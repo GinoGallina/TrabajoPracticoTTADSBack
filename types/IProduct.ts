@@ -2,14 +2,14 @@ import { IGenericGetAllRequest } from "./shared/IBaseRequest.js";
 import { IGenericGetAllResponse } from "./shared/IBaseResponse.js";
 
 // Get All My Products
-
 export interface IMyProductGetAllResponse extends IGenericGetAllResponse {
 	products: {
 		id: string;
 		name: string;
+		categoryName: string;
+		user: string;
 		price: number;
 		stock: number;
-		categoryName: string;
 		createdAt: string;
 	}[];
 }
@@ -51,6 +51,10 @@ export interface IProductGetDetailsResponse {
 		storeName: string;
 		storeDescription: string;
 	};
+	rating: {
+		rate: number;
+		totalReviews: number;
+	};
 }
 
 // Get One
@@ -63,6 +67,10 @@ export interface IProductGetOneResponse {
 	image?: string;
 	categoryId: string;
 	userId: string;
+	rating: {
+		rate: number;
+		totalReviews: number;
+	};
 	createdAt: string;
 }
 

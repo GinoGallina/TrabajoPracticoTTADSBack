@@ -21,10 +21,7 @@ export class RoleService {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo combo de roles", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo combo de roles");
 		}
 	}
 }

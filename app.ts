@@ -31,15 +31,10 @@ const app = express();
 app.use(json());
 app.use(cors());
 
+// TODO
 // app.use(helmet()); // Agrega encabezados de seguridad HTTP
 // app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(",") || "*" })); // Restringe accesos
 app.disable("x-powered-by");
-
-// Middleware de manejo de errores centralizado
-// app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-// 	console.error("❌ Error:", err.message);
-// 	res.status(500).json({ error: "Ocurrió un error inesperado" });
-//   });
 
 const PORT = Number(process.env.PORT) || 3000;
 

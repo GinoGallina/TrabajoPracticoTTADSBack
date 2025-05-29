@@ -48,14 +48,20 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<IPaymentTypeGetAllResponse | null>> {
 		try {
 			const paymentTypes = await this.paymentTypeRepository.getAll(query);
-			return {
-				message: "",
-				data: {
-					paymentTypes: paymentTypes.items.map((x) => ({
+
+			const mappedPaymentTypes = paymentTypes.items.map(
+				(x) =>
+					({
 						id: x.Id!.toString(),
 						name: x.Name,
 						createdAt: formatDateToArgentina(x.CreatedAt!),
-					})),
+					}) satisfies IPaymentTypeGetAllResponse["paymentTypes"][number],
+			);
+
+			return {
+				message: "",
+				data: {
+					paymentTypes: mappedPaymentTypes,
 					totalCount: paymentTypes?.totalCount || 0,
 				},
 				error: null,
@@ -63,10 +69,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo métodos de pago", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo métodos de pago");
 		}
 	}
 
@@ -80,17 +83,14 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 					message: Messages.Error.EntityNotFound("Método de pago"),
 				});
 
-			return createSuccessResponse("Método de pago obtenidao correctamente", {
+			return createSuccessResponse<IPaymentTypeResponse>("Método de pago obtenidao correctamente", {
 				id: paymentType.Id!.toString(),
 				name: paymentType.Name,
 				createdAt: formatDateToArgentina(paymentType.CreatedAt!),
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error creando método de pago", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando método de pago");
 		}
 	}
 	async getCombo(): Promise<IBaseResponse<IGetCombo | null>> {
@@ -106,10 +106,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo combo de métodos de pago", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo combo de métodos de pago");
 		}
 	}
 
@@ -133,7 +130,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Método de pago"), {
+			return createSuccessResponse<IPaymentTypeResponse>(Messages.CRUD.EntityCreated("Método de pago"), {
 				id: paymentType.Id!.toString(),
 				name: paymentType.Name,
 				createdAt: formatDateToArgentina(paymentType.CreatedAt!),
@@ -141,10 +138,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando método de pago", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando método de pago");
 		} finally {
 			await queryRunner.release();
 		}
@@ -186,7 +180,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityUpdated("Método de pago"), {
+			return createSuccessResponse<IPaymentTypeResponse>(Messages.CRUD.EntityUpdated("Método de pago"), {
 				id: paymentType.Id!.toString(),
 				name: paymentType.Name,
 				createdAt: formatDateToArgentina(paymentType.CreatedAt!),
@@ -194,10 +188,7 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error editando método de pago", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error editando método de pago");
 		} finally {
 			await queryRunner.release();
 		}
@@ -225,16 +216,13 @@ export class PaymentTypeService extends BaseService<PaymentType> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Método de pago"), {
+			return createSuccessResponse<IGenericDeleteResponse>(Messages.CRUD.EntityDeleted("Método de pago"), {
 				id: id!.toString(),
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando Método de pago", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error eliminando Método de pago");
 		} finally {
 			await queryRunner.release();
 		}

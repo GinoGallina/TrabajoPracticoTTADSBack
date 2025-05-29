@@ -18,15 +18,6 @@ export async function seedDatabase(db: DataSource) {
 			console.log(`Rol creado: ${name}`);
 		}
 	}
-	// TODO: ver si anda
-	// const admin = await userRepo.findOne({
-	// 	relations: ["Roles"],
-	// 	where: {
-	// 		Roles: {
-	// 			Name: RoleEnum.Admin,
-	// 		},
-	// 	},
-	// });
 
 	const users = await userRepo.find({
 		relations: ["Roles"],
@@ -45,7 +36,6 @@ export async function seedDatabase(db: DataSource) {
 			Email: "admin@localhost.com",
 			Username: "Admin Admin",
 			Address: "Brown 174881",
-			// TODO: Check Hash password
 			Password: await bcrypt.hash("Password1!", 10),
 			Roles: [adminRole],
 		});

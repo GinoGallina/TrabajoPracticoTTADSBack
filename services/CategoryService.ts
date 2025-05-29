@@ -43,14 +43,19 @@ export class CategoryService extends BaseService<Category> {
 	async getAll(query: IGenericGetAllRequest): Promise<IBaseResponse<ICategoryGetAllResponse | null>> {
 		try {
 			const categories = await this.categoryRepository.getAll(query);
-			return {
-				message: "",
-				data: {
-					categories: categories.items.map((x) => ({
+
+			const mappedCategories = categories.items.map(
+				(x) =>
+					({
 						id: x.Id!.toString(),
 						name: x.Name,
 						createdAt: formatDateToArgentina(x.CreatedAt!),
-					})),
+					}) satisfies ICategoryGetAllResponse["categories"][number],
+			);
+			return {
+				message: "",
+				data: {
+					categories: mappedCategories,
 					totalCount: categories?.totalCount || 0,
 				},
 				error: null,
@@ -58,10 +63,7 @@ export class CategoryService extends BaseService<Category> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo categorías", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo categorías");
 		}
 	}
 
@@ -74,17 +76,14 @@ export class CategoryService extends BaseService<Category> {
 					message: Messages.Error.EntityNotFound("Categoría", true),
 				});
 
-			return createSuccessResponse("Categoría obtenida correctamente.", {
+			return createSuccessResponse<ICategoryResponse>("Categoría obtenida correctamente.", {
 				id: category.Id!.toString(),
 				name: category.Name,
 				createdAt: formatDateToArgentina(category.CreatedAt!),
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error creando categoría", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando categoría");
 		}
 	}
 	async getCombo(): Promise<IBaseResponse<IGetCombo | null>> {
@@ -100,10 +99,7 @@ export class CategoryService extends BaseService<Category> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo combo de categorías", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo combo de categorías");
 		}
 	}
 
@@ -127,7 +123,7 @@ export class CategoryService extends BaseService<Category> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Categoría", true), {
+			return createSuccessResponse<ICategoryResponse>(Messages.CRUD.EntityCreated("Categoría", true), {
 				id: category.Id!.toString(),
 				name: category.Name,
 				createdAt: formatDateToArgentina(category.CreatedAt!),
@@ -135,10 +131,7 @@ export class CategoryService extends BaseService<Category> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando categoría", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando categoría");
 		} finally {
 			await queryRunner.release();
 		}
@@ -172,7 +165,7 @@ export class CategoryService extends BaseService<Category> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityUpdated("Categoría", true), {
+			return createSuccessResponse<ICategoryResponse>(Messages.CRUD.EntityUpdated("Categoría", true), {
 				id: prevCategory.Id!.toString(),
 				name: prevCategory.Name,
 				createdAt: formatDateToArgentina(prevCategory.CreatedAt!),
@@ -180,10 +173,7 @@ export class CategoryService extends BaseService<Category> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando categoría", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando categoría");
 		} finally {
 			await queryRunner.release();
 		}
@@ -212,16 +202,13 @@ export class CategoryService extends BaseService<Category> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Categoría", true), {
+			return createSuccessResponse<IGenericDeleteResponse>(Messages.CRUD.EntityDeleted("Categoría", true), {
 				id,
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando categoría", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error eliminando categoría");
 		} finally {
 			await queryRunner.release();
 		}

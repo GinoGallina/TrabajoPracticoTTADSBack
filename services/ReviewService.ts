@@ -14,7 +14,6 @@ import { BaseService } from "./BaseService.js";
 import { Review } from "../models/database/Review.js";
 import { ReviewRepository } from "../repository/ReviewRepository.js";
 import { AuthService } from "./AuthService.js";
-import { openai } from "../config/openai.js";
 import { formatDateToArgentina } from "../utils/DateFormatter.js";
 
 @injectable()
@@ -43,37 +42,28 @@ export class ReviewService extends BaseService<Review> {
 				message: "La puntuación debe ser entre 1 y 5.",
 			});
 		}
-
-		// Verify comment with open ai
-		// const moderationResponse = await openai.moderations.create({
-		// 	// model: "omni-moderation-latest",
-		// 	input: rq.Description,
-		// });
-
-		// const flagged = moderationResponse.results[0].flagged;
-
-		// if (flagged) {
-		// 	await queryRunner.rollbackTransaction();
-		// 	return createErrorResponse("Contenido inapropiado", {
-		// 		code: 400,
-		// 		message: "El comentario contiene lenguaje inapropiado y no puede ser publicado.",
-		// 	});
-		// }
 	}
 
 	async getAll(query: IReviewGetAllRequest): Promise<IBaseResponse<IReviewGetAllResponse | null>> {
 		try {
 			const reviews = await this.reviewRepository.getAll(query);
-			return {
-				message: "",
-				data: {
-					reviews: reviews.items.map((x) => ({
+
+			const mappedReviews = reviews.items.map(
+				(x) =>
+					({
 						id: x.Id!.toString(),
 						description: x.Description,
 						rate: x.Rate,
 						user: x.User.Username,
+						userId: x.User.Id!,
 						createdAt: formatDateToArgentina(x.CreatedAt!),
-					})),
+					}) satisfies IReviewGetAllResponse["reviews"][number],
+			);
+
+			return {
+				message: "",
+				data: {
+					reviews: mappedReviews,
 					totalCount: reviews?.totalCount || 0,
 				},
 				error: null,
@@ -81,10 +71,7 @@ export class ReviewService extends BaseService<Review> {
 			};
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo las reseñas", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo las reseñas");
 		}
 	}
 
@@ -97,7 +84,7 @@ export class ReviewService extends BaseService<Review> {
 					message: Messages.Error.EntityNotFound("Reseña", true),
 				});
 
-			return createSuccessResponse("Reseña obtenida correctamente", {
+			return createSuccessResponse<IReviewResponse>("Reseña obtenida correctamente", {
 				id: review.Id!.toString(),
 				description: review.Description,
 				rate: review.Rate,
@@ -105,10 +92,7 @@ export class ReviewService extends BaseService<Review> {
 			});
 		} catch (e) {
 			console.log(e);
-			return createErrorResponse("Error obteniendo reseña", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error obteniendo reseña");
 		}
 	}
 
@@ -125,34 +109,6 @@ export class ReviewService extends BaseService<Review> {
 
 			if (validateRq) return validateRq;
 
-			////////////////////////////////
-
-			// const completion = await openai.chat.completions.create({
-			// 	model: "gpt-3.5-turbo",
-			// 	messages: [
-			// 		{
-			// 			role: "system",
-			// 			content:
-			// 				'Sos un moderador de reseñas. Tu tarea es revisar si el siguiente comentario de producto contiene lenguaje ofensivo, insultante, grosero, discriminatorio o sexual. Respondé únicamente con "aprobado" o "rechazado".',
-			// 		},
-			// 		{
-			// 			role: "user",
-			// 			content: `Comentario: "${rq.Description}"`,
-			// 		},
-			// 	],
-			// 	temperature: 0,
-			// });
-
-			// const decision = completion.choices[0].message.content?.toLowerCase();
-
-			// if (decision?.includes("rechazado")) {
-			// 	await queryRunner.rollbackTransaction();
-			// 	return createErrorResponse("Error al crear la reseña", {
-			// 		code: 400,
-			// 		message: "El comentario contiene lenguaje inapropiado y no puede ser publicado.",
-			// 	});
-			// }
-
 			const reviewToCreate = new Review({
 				Description: rq.Description,
 				Rate: rq.Rate,
@@ -164,7 +120,7 @@ export class ReviewService extends BaseService<Review> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityCreated("Reseña", true), {
+			return createSuccessResponse<IReviewResponse>(Messages.CRUD.EntityCreated("Reseña", true), {
 				id: review.Id!.toString(),
 				description: review.Description,
 				rate: review.Rate,
@@ -173,10 +129,7 @@ export class ReviewService extends BaseService<Review> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando reseña", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando reseña");
 		} finally {
 			await queryRunner.release();
 		}
@@ -211,7 +164,7 @@ export class ReviewService extends BaseService<Review> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityUpdated("Reseña", true), {
+			return createSuccessResponse<IReviewResponse>(Messages.CRUD.EntityUpdated("Reseña", true), {
 				id: prevReview.Id!.toString(),
 				description: prevReview.Description,
 				rate: prevReview.Rate,
@@ -220,10 +173,7 @@ export class ReviewService extends BaseService<Review> {
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error creando categoría", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error creando categoría");
 		} finally {
 			await queryRunner.release();
 		}
@@ -252,16 +202,13 @@ export class ReviewService extends BaseService<Review> {
 
 			await queryRunner.commitTransaction();
 
-			return createSuccessResponse(Messages.CRUD.EntityDeleted("Reseña", true), {
+			return createSuccessResponse<IGenericDeleteResponse>(Messages.CRUD.EntityDeleted("Reseña", true), {
 				id,
 			});
 		} catch (e) {
 			await queryRunner.rollbackTransaction();
 			console.log(e);
-			return createErrorResponse("Error eliminando reseña", {
-				code: e instanceof Error ? 500 : 500, // TODO: CODE DE error si es instance of Error
-				message: "",
-			});
+			return createErrorResponse("Error eliminando reseña");
 		} finally {
 			await queryRunner.release();
 		}
